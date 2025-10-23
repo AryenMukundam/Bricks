@@ -61,6 +61,28 @@ export const studentlogout = async () => {
   }
 };
 
+export const studentprofile = async () => {
+  try {
+    const response = await api.get("/students/profile");
+    return response.data;
+  } catch (error) {
+    throw {
+      message: error.response?.data?.msg || 'Data Not Visible'
+    };
+  }
+};
+
+export const instructorprofile = async () => {
+  try {
+    const response = await api.get("/instructors/profile");
+    return response.data;
+  } catch (error) {
+    throw {
+      message: error.response?.data?.msg || 'Data Not Visible'
+    };
+  }
+};
+
 // First-Time Login Flow APIs
 export const requestPasswordChangeOTP = async (data) => {
   try {

@@ -4,10 +4,12 @@ import storage from 'redux-persist/lib/storage';
 import { combineReducers } from '@reduxjs/toolkit';
 import studentSlicereducer from "./studentSlice.js";
 import instructorSlicereducer from "./instructorSlice.js";
+import classSlicereducer from "./classSlice.js"
 
 const rootReducer = combineReducers({
     student: studentSlicereducer,
-    instructor: instructorSlicereducer
+    instructor: instructorSlicereducer,
+    class: classSlicereducer
 });
 
 const persistConfig = {

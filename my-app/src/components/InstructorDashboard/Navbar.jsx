@@ -138,6 +138,7 @@ function Navbar() {
           <div className="flex items-center justify-between w-full">
             <div className="flex items-center space-x-4">
               <button
+              onClick={()=>{navigate('/instructors-dashboard')}}
                 className="flex items-center space-x-3 group hover:opacity-95 transition-all duration-300"
                 aria-label="Logo"
               >

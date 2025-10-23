@@ -144,7 +144,6 @@ function StudentProfile() {
             <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2"><FiUser className="text-green-500"/>Personal Details</h2>
             <div className="space-y-6">
                <InfoField label="Email Address" value={studentData.email} icon={FiMail} />
-               <InfoField label="Student ID" value={<span className="font-mono text-sm">{studentData._id}</span>} />
                <InfoField label="Member Since" value={formatDate(studentData.createdAt)} icon={FiCalendar}/>
                {studentData.lastActive && <InfoField label="Last Active" value={formatDate(studentData.lastActive)} icon={FiClock} />}
             </div>

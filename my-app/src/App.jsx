@@ -14,6 +14,7 @@ import StudentProfile from "./pages/StudentDashboard/StudentProfile";
 import InstructorHome from "./pages/InstructorDashboard/InstructorHome";
 import ForgotPassword from "./pages/StudentDashboard/ForgotPassword";
 import InstructorProfile from "./pages/InstructorDashboard/InstructorProfile";
+import ClassSchedule from "./pages/InstructorDashboard/ClassSchedule";
 
 const getCookie = (name) => {
   const value = `; ${document.cookie}`;
@@ -36,9 +37,10 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
 
   if (allowedRoles && !allowedRoles.includes(userRole)) {
     // Redirect to appropriate dashboard based on role
-    const redirectPath = userRole === 'instructor' 
-      ? '/instructor-dashboard' 
-      : '/student-dashboard';
+    const redirectPath =
+      userRole === "instructor"
+        ? "/instructor-dashboard"
+        : "/student-dashboard";
     return <Navigate to={redirectPath} replace />;
   }
 
@@ -51,9 +53,10 @@ const PublicRoute = ({ children }) => {
 
   if (token) {
     // Redirect to appropriate dashboard based on role
-    const redirectPath = userRole === 'instructor'
-      ? '/instructor-dashboard'
-      : '/student-dashboard';
+    const redirectPath =
+      userRole === "instructor"
+        ? "/instructor-dashboard"
+        : "/student-dashboard";
     return <Navigate to={redirectPath} replace />;
   }
 
@@ -152,7 +155,7 @@ function App() {
         <Route
           path="/student-dashboard"
           element={
-            <ProtectedRoute allowedRoles={['student']}>
+            <ProtectedRoute allowedRoles={["student"]}>
               <StudentHome />
             </ProtectedRoute>
           }
@@ -161,7 +164,7 @@ function App() {
         <Route
           path="/instructor-dashboard"
           element={
-            <ProtectedRoute allowedRoles={['instructor']}>
+            <ProtectedRoute allowedRoles={["instructor"]}>
               <InstructorHome />
             </ProtectedRoute>
           }
@@ -170,17 +173,26 @@ function App() {
         <Route
           path="/student/profile"
           element={
-            <ProtectedRoute allowedRoles={['student']}>
+            <ProtectedRoute allowedRoles={["student"]}>
               <StudentProfile />
             </ProtectedRoute>
           }
         />
 
-         <Route
+        <Route
           path="/instructor/profile"
           element={
-            <ProtectedRoute allowedRoles={['instructor']}>
+            <ProtectedRoute allowedRoles={["instructor"]}>
               <InstructorProfile />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/class-schedule"
+          element={
+            <ProtectedRoute allowedRoles={["instructor"]}>
+              <ClassSchedule />
             </ProtectedRoute>
           }
         />
