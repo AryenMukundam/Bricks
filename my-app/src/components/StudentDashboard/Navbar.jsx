@@ -210,26 +210,14 @@ function Navbar() {
               <span>Home</span>
             </a>
             <a
-              href="/dashboard"
+              href="/classes"
               className="flex items-center space-x-4 px-4 py-2.5 text-gray-600 hover:bg-orange-50 hover:text-red-600 rounded-lg transition-colors"
             >
               <CreditCard size={24} />
               <span>Class</span>
             </a>
-            <a
-              href="/dashboard"
-              className="flex items-center space-x-4 px-4 py-2.5 text-gray-600 hover:bg-orange-50 hover:text-red-600 rounded-lg transition-colors"
-            >
-              <Package size={24} />
-              <span>All Problems</span>
-            </a>
-            <a
-              href="/dashboard"
-              className="flex items-center space-x-4 px-4 py-2.5 text-gray-600 hover:bg-orange-50 hover:text-red-600 rounded-lg transition-colors"
-            >
-              <TrendingUp size={24} />
-              <span>Leaderboard</span>
-            </a>
+            
+            
           </nav>
 
           <div className="flex-grow"></div>

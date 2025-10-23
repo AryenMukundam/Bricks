@@ -78,3 +78,18 @@ export const updateClass = async (classId, classData) => {
     };
   }
 };
+
+// Student APIs
+
+export const getStudentClasses = async ({ status, upcoming, page = 1, limit = 10 } = {}) => {
+  try {
+    const params = { status, upcoming, page, limit };
+    const response = await api.get("/classes/student/classes", { params });
+    return response.data;
+  } catch (error) {
+    throw {
+      message: error.response?.data?.msg || error.response?.data?.message || "Failed to fetch student classes",
+      errors: error.response?.data?.errors || null,
+    };
+  }
+};

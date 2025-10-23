@@ -15,6 +15,7 @@ import InstructorHome from "./pages/InstructorDashboard/InstructorHome";
 import ForgotPassword from "./pages/StudentDashboard/ForgotPassword";
 import InstructorProfile from "./pages/InstructorDashboard/InstructorProfile";
 import ClassSchedule from "./pages/InstructorDashboard/ClassSchedule";
+import AllClass from "./pages/StudentDashboard/AllClass";
 
 const getCookie = (name) => {
   const value = `; ${document.cookie}`;
@@ -157,6 +158,15 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={["student"]}>
               <StudentHome />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/classes"
+          element={
+            <ProtectedRoute allowedRoles={["student"]}>
+              <AllClass />
             </ProtectedRoute>
           }
         />

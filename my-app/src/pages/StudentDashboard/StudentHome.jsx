@@ -10,7 +10,6 @@ function StudentHome() {
       <Navbar />
       <Class />
       <Practise />
-      <Footer/>
     </>
   );
 }

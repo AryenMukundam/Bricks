@@ -128,7 +128,7 @@ const getInstructorClasses = async (req, res) => {
 const getStudentClasses = async (req, res) => {
   try {
     const student = req.student;
-    const { status, upcoming, page = 1, limit = 10 } = req.query;
+    const { status, upcoming, past, page = 1, limit = 10 } = req.query;
 
     const query = {
       batch: student.batch,
@@ -139,22 +139,39 @@ const getStudentClasses = async (req, res) => {
       query.status = status;
     }
 
+    // Handle upcoming classes
     if (upcoming === "true") {
       query.scheduledAt = { $gte: new Date() };
       query.status = { $in: ["scheduled", "ongoing"] };
     }
 
+    // Handle past/completed classes
+    if (past === "true") {
+      query.$or = [
+        { status: "completed" },
+        { 
+          status: "scheduled",
+          scheduledAt: { $lt: new Date() }
+        }
+      ];
+    }
+
     const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    // Sort: upcoming classes ascending (nearest first), past classes descending (most recent first)
+    const sortOrder = upcoming === "true" ? 1 : -1;
 
     const classes = await classModel
       .find(query)
-      .sort({ scheduledAt: upcoming === "true" ? 1 : -1 })
+      .sort({ scheduledAt: sortOrder })
       .skip(skip)
       .limit(parseInt(limit))
       .select("-attendees");
 
+    // Update status for each class
     for (let cls of classes) {
       cls.updateStatus();
+      await cls.save();
     }
 
     const total = await classModel.countDocuments(query);
@@ -175,7 +192,6 @@ const getStudentClasses = async (req, res) => {
       .json({ errors: [{ msg: "Server error while fetching classes" }] });
   }
 };
-
 const getClassById = async (req, res) => {
   try {
     const { classId } = req.params;
