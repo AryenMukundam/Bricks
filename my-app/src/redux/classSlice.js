@@ -15,11 +15,23 @@ const initialState = {
 
 const classSlice = createSlice({
   name: 'class',
-  initialState,
+  initialState: {
+    classData: [],
+    loading: false,
+    error: null,
+    pagination: {
+      currentPage: 1,
+      totalPages: 1,
+      totalClasses: 0,
+      hasMore: false
+    }
+  },
   reducers: {
     setClassData: (state, action) => {
-      // Add new class to the beginning of the array
+      // Add new class to the beginning
       state.classData = [action.payload, ...state.classData];
+      // Update pagination count when adding
+      state.pagination.totalClasses += 1;
     },
     setAllClasses: (state, action) => {
       state.classData = action.payload;
@@ -28,9 +40,14 @@ const classSlice = createSlice({
       state.pagination = action.payload;
     },
     removeClassData: (state, action) => {
+      // Filter out the deleted class
       state.classData = state.classData.filter(
         cls => cls._id !== action.payload
       );
+      // Update pagination count
+      if (state.pagination.totalClasses > 0) {
+        state.pagination.totalClasses -= 1;
+      }
     },
     updateClassData: (state, action) => {
       const index = state.classData.findIndex(

@@ -53,16 +53,20 @@ export const getInstructorClasses = async ({ status, batch, page = 1, limit = 10
 
 export const deleteClass = async (classId) => {
   try {
-    const response = await api.delete(`/classes/${classId}`);
+    const response = await api.delete(`/classes/instructor/class/${classId}`);
     return response.data;
   } catch (error) {
+    const errorMessage = error.response?.data?.message || 
+                        error.response?.data?.msg || 
+                        "Failed to delete class";
+    
     throw {
-      message: error.response?.data?.msg || "Failed to delete class",
+      message: errorMessage,
       errors: error.response?.data?.errors || null,
+      status: error.response?.status
     };
   }
 };
-
 export const updateClass = async (classId, classData) => {
   try {
     const response = await api.put(`/classes/${classId}`, classData);
