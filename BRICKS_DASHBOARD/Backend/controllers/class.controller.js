@@ -1,6 +1,7 @@
 import { validationResult } from "express-validator";
 import studentModel from "../models/student.model.js";
 import classModel from "../models/class.model.js";
+import notificationService from "../services/notification.service.js";
 
 const createClass = async (req, res) => {
   try {
@@ -52,6 +53,16 @@ const createClass = async (req, res) => {
       scheduledAt,
       duration: duration || 60,
     });
+
+    notificationService
+      .sendClassScheduledNotification(
+        batch,
+        newClass,
+        `${instructor.fullname.firstname} ${
+          instructor.fullname.lastname || ""
+        }`.trim()
+      )
+      .catch((err) => console.error("Notification error:", err));
 
     res.status(201).json({
       msg: "Class created successfully",
@@ -280,6 +291,42 @@ const updateClass = async (req, res) => {
     classData.updatedAt = Date.now();
     await classData.save();
 
+    const updatedFields = [];
+    if (updateData.className) {
+      updatedFields.push("Class Name");
+    }
+    if (updateData.description) {
+      updatedFields.push("Description");
+    }
+    if (updateData.googleMeetLink) {
+      updatedFields.push("Google Meet Link");
+    }
+    if (updateData.preReadLinks) {
+      updatedFields.push("Pre-read Links");
+    }
+    if (updateData.scheduledAt) {
+      updatedFields.push("Scheduled Date and Time");
+    }
+    if (updateData.duration) {
+      updatedFields.push("Duration");
+    }
+    if (updateData.materials) {
+      updatedFields.push("Materials");
+    }
+
+    if (updatedFields.length > 0) {
+      notificationService
+        .sendClassUpdatedNotification(
+          classData.batch,
+          classData,
+          classData.instructorName,
+          updatedFields
+        )
+        .catch((err) =>
+          console.error("Error sending class updated notification:", err)
+        );
+    }
+
     res.status(200).json({
       msg: "Class updated successfully",
       class: classData,
@@ -314,6 +361,17 @@ const deleteClass = async (req, res) => {
     classData.isActive = false;
     classData.status = "cancelled";
     await classData.save();
+
+    notificationService
+      .sendClassCancelledNotification(
+        classData.batch,
+        classData,
+        classData.instructorName,
+        "Class has been cancelled by the instructor"
+      )
+      .catch((err) =>
+        console.error("Error sending class cancelled notification:", err)
+      );
 
     res.status(200).json({
       msg: "Class deleted successfully",

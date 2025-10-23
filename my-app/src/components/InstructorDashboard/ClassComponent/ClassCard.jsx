@@ -12,9 +12,15 @@ import {
 import toast from "react-hot-toast";
 
 const ClassCard = ({ classItem, index, onDelete }) => {
-  // Check if class is upcoming or past
-  const isUpcoming = (scheduledAt) => {
-    return new Date(scheduledAt) > new Date();
+  // Get class status - 'upcoming', 'ongoing', or 'completed'
+  const getClassStatus = (scheduledAt, duration) => {
+    const now = new Date();
+    const startTime = new Date(scheduledAt);
+    const endTime = new Date(startTime.getTime() + duration * 60000); // duration in minutes
+    
+    if (now < startTime) return 'upcoming';
+    if (now >= startTime && now <= endTime) return 'ongoing';
+    return 'completed';
   };
 
   // Format date for display
@@ -31,36 +37,75 @@ const ClassCard = ({ classItem, index, onDelete }) => {
     return date.toLocaleDateString('en-US', options);
   };
 
-  // Get time remaining until class
-  const getTimeRemaining = (scheduledAt) => {
+  // Get time remaining or time since start
+  const getTimeInfo = (scheduledAt, duration, status) => {
     const now = new Date();
-    const classTime = new Date(scheduledAt);
-    const diff = classTime - now;
+    const startTime = new Date(scheduledAt);
+    const endTime = new Date(startTime.getTime() + duration * 60000);
     
-    if (diff < 0) return "Class ended";
+    if (status === 'completed') {
+      return { text: "Class ended", type: "ended" };
+    }
     
+    if (status === 'ongoing') {
+      const diff = endTime - now;
+      const minutes = Math.floor(diff / (1000 * 60));
+      if (minutes <= 0) return { text: "Ending now", type: "ending" };
+      if (minutes < 60) return { text: `${minutes} min remaining`, type: "ongoing" };
+      const hours = Math.floor(minutes / 60);
+      return { text: `${hours}h ${minutes % 60}m remaining`, type: "ongoing" };
+    }
+    
+    // Upcoming
+    const diff = startTime - now;
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
     const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
     
-    if (days > 0) return `In ${days} day${days > 1 ? 's' : ''}`;
-    if (hours > 0) return `In ${hours} hour${hours > 1 ? 's' : ''}`;
-    if (minutes > 0) return `In ${minutes} minute${minutes > 1 ? 's' : ''}`;
-    return "Starting now";
+    if (days > 0) return { text: `In ${days} day${days > 1 ? 's' : ''}`, type: "upcoming" };
+    if (hours > 0) return { text: `In ${hours} hour${hours > 1 ? 's' : ''}`, type: "upcoming" };
+    if (minutes > 0) return { text: `In ${minutes} min`, type: "upcoming" };
+    return { text: "Starting now", type: "starting" };
   };
 
-  const upcoming = isUpcoming(classItem.scheduledAt);
+  const status = getClassStatus(classItem.scheduledAt, classItem.duration);
+  const timeInfo = getTimeInfo(classItem.scheduledAt, classItem.duration, status);
+  const showMeetLink = status === 'upcoming' || status === 'ongoing';
+
+  // Get badge styling based on status
+  const getBadgeStyle = (type) => {
+    switch(type) {
+      case 'ongoing':
+        return 'px-3 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full animate-pulse';
+      case 'ending':
+      case 'starting':
+        return 'px-3 py-1 bg-yellow-100 text-yellow-700 text-xs font-medium rounded-full';
+      case 'upcoming':
+        return 'px-3 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full';
+      case 'ended':
+        return 'px-3 py-1 bg-gray-200 text-gray-600 text-xs font-medium rounded-full';
+      default:
+        return 'px-3 py-1 bg-gray-200 text-gray-600 text-xs font-medium rounded-full';
+    }
+  };
+
+  // Get card border and background based on status
+  const getCardStyle = () => {
+    if (status === 'ongoing') {
+      return 'border-blue-300 bg-blue-50/40 ring-2 ring-blue-200';
+    }
+    if (status === 'upcoming') {
+      return 'border-orange-200 bg-orange-50/30';
+    }
+    return 'border-gray-200 bg-gray-50/30';
+  };
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.1 }}
-      className={`border rounded-xl p-6 hover:shadow-md transition-shadow ${
-        upcoming 
-          ? "border-orange-200 bg-orange-50/30" 
-          : "border-gray-200 bg-gray-50/30"
-      }`}
+      className={`border rounded-xl p-6 hover:shadow-md transition-shadow ${getCardStyle()}`}
     >
       <div className="flex items-start justify-between">
         {/* Left Section */}
@@ -69,14 +114,12 @@ const ClassCard = ({ classItem, index, onDelete }) => {
             <h3 className="text-xl font-bold text-gray-900">
               {classItem.className}
             </h3>
-            {upcoming && (
-              <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">
-                {getTimeRemaining(classItem.scheduledAt)}
-              </span>
-            )}
-            {!upcoming && (
-              <span className="px-3 py-1 bg-gray-200 text-gray-600 text-xs font-medium rounded-full">
-                Completed
+            <span className={getBadgeStyle(timeInfo.type)}>
+              {timeInfo.text}
+            </span>
+            {status === 'ongoing' && (
+              <span className="px-3 py-1 bg-red-500 text-white text-xs font-medium rounded-full">
+                LIVE NOW
               </span>
             )}
           </div>
@@ -129,39 +172,52 @@ const ClassCard = ({ classItem, index, onDelete }) => {
             </div>
           )}
 
-          {/* Meet Link */}
-          {upcoming && (
+          {/* Meet Link - Show for upcoming AND ongoing classes */}
+          {showMeetLink && (
             <a
               href={classItem.googleMeetLink}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-sm font-medium"
+              className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg transition-colors text-sm font-medium ${
+                status === 'ongoing'
+                  ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg'
+                  : 'bg-orange-600 hover:bg-orange-700 text-white'
+              }`}
             >
               <FiExternalLink size={16} />
-              Join Google Meet
+              {status === 'ongoing' ? 'Join Class Now' : 'Join Google Meet'}
             </a>
+          )}
+
+          {/* Show ended message for completed classes */}
+          {status === 'completed' && (
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-600 rounded-lg text-sm font-medium">
+              Class has ended
+            </div>
           )}
         </div>
 
         {/* Right Section - Actions */}
-        <div className="flex gap-2 ml-4">
-          <button
-            onClick={() => {
-              toast.info("Edit feature coming soon!");
-            }}
-            className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-            title="Edit class"
-          >
-            <FiEdit2 size={18} />
-          </button>
-          <button
-            onClick={() => onDelete(classItem._id)}
-            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-            title="Delete class"
-          >
-            <FiTrash2 size={18} />
-          </button>
-        </div>
+        {status !== 'ongoing' && (
+          <div className="flex gap-2 ml-4">
+            <button
+              onClick={() => {
+                toast.info("Edit feature coming soon!");
+              }}
+              className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              title="Edit class"
+            >
+              <FiEdit2 size={18} />
+            </button>
+            <button
+              onClick={() => onDelete(classItem._id)}
+              className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+              title="Delete class"
+            >
+              <FiTrash2 size={18} />
+            </button>
+          </div>
+        )}
       </div>
     </motion.div>
   );

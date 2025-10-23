@@ -14,6 +14,11 @@ const ClassList = ({
     return new Date(scheduledAt) > new Date();
   };
 
+  const ongoing = (duration) => {
+    return new Date(duration) > new Date()
+
+  }
+
   // Filter classes based on selected filter
   const getFilteredClasses = () => {
     if (!classes || classes.length === 0) return [];
@@ -22,7 +27,7 @@ const ClassList = ({
       case "upcoming":
         return classes.filter((cls) => isUpcoming(cls.scheduledAt));
       case "past":
-        return classes.filter((cls) => !isUpcoming(cls.scheduledAt));
+        return classes.filter((cls) => ongoing(cls.scheduledAt+cls.length));
       default:
         return classes;
     }
