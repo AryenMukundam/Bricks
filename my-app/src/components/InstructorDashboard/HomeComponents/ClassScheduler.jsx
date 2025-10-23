@@ -164,11 +164,11 @@ const ClassScheduler = () => {
         </div>
         <button
           onClick={() => navigate("/class-schedule")}
-          className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+          className="flex items-center gap- px-5 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
         >
-          <FiPlus size={18} />
-          <span className="font-medium">New Class</span>
+          <span className="font-medium">All Class</span>
         </button>
+        
       </div>
 
       {/* Week Navigator */}

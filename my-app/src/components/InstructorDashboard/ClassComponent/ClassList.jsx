@@ -8,18 +8,18 @@ const ClassList = ({
   setSelectedFilter,
   fetchLoading,
   onDeleteClass,
+  onEditClass
 }) => {
-  // Check if class is upcoming or past
   const isUpcoming = (scheduledAt) => {
     return new Date(scheduledAt) > new Date();
   };
 
-  const ongoing = (duration) => {
-    return new Date(duration) > new Date()
+  const isPast = (scheduledAt, duration) => {
+    const start = new Date(scheduledAt);
+    const end = new Date(start.getTime() + duration * 60000);
+    return end < new Date();
+  };
 
-  }
-
-  // Filter classes based on selected filter
   const getFilteredClasses = () => {
     if (!classes || classes.length === 0) return [];
 
@@ -27,7 +27,7 @@ const ClassList = ({
       case "upcoming":
         return classes.filter((cls) => isUpcoming(cls.scheduledAt));
       case "past":
-        return classes.filter((cls) => ongoing(cls.scheduledAt+cls.length));
+        return classes.filter((cls) => isPast(cls.scheduledAt, cls.duration));
       default:
         return classes;
     }
@@ -35,14 +35,12 @@ const ClassList = ({
 
   const filteredClasses = getFilteredClasses();
 
-  // Sort classes by date (newest first)
   const sortedClasses = [...filteredClasses].sort(
     (a, b) => new Date(b.scheduledAt) - new Date(a.scheduledAt)
   );
 
   return (
     <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
-      {/* Filter Tabs */}
       <div className="border-b border-gray-200 px-6 py-4">
         <div className="flex gap-2">
           <button
@@ -78,7 +76,6 @@ const ClassList = ({
         </div>
       </div>
 
-      {/* Classes List */}
       <div className="p-6">
         {fetchLoading && sortedClasses.length === 0 ? (
           <div className="text-center py-12">
@@ -108,6 +105,7 @@ const ClassList = ({
                 classItem={classItem}
                 index={index}
                 onDelete={onDeleteClass}
+                onEdit={() => onEditClass(classItem)}
               />
             ))}
           </div>

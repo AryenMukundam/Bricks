@@ -3,19 +3,20 @@ import { useDispatch, useSelector } from "react-redux";
 import { FiPlus, FiRefreshCw } from "react-icons/fi";
 import toast from "react-hot-toast";
 import Navbar from "../../components/InstructorDashboard/Navbar";
-import ClassList from "../../components/InstructorDashboard/ClassComponent/ClassList.jsx"; 
+import ClassList from "../../components/InstructorDashboard/ClassComponent/ClassList.jsx";
 import ClassModal from "../../components/InstructorDashboard/ClassComponent/ClassModal.jsx";
-import { 
-  createClass, 
-  getInstructorClasses, 
-  deleteClass 
+import {
+  createClass,
+  getInstructorClasses,
+  deleteClass,
+  updateClass
 } from "../../apiCalls/classCalls.js";
-import { 
-  setClassData, 
-  setAllClasses, 
-  setPagination, 
-  removeClassData, 
-  setLoading as setClassLoading 
+import {
+  setClassData,
+  setAllClasses,
+  setPagination,
+  removeClassData,
+  setLoading as setClassLoading,
 } from "../../redux/classSlice.js";
 
 const ClassSchedule = () => {
@@ -24,6 +25,9 @@ const ClassSchedule = () => {
   const [showModal, setShowModal] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState("all");
   const [fetchLoading, setFetchLoading] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [editClassData, setEditClassData] = useState(null);
+
   const dispatch = useDispatch();
 
   // Fetch classes on component mount
@@ -36,17 +40,16 @@ const ClassSchedule = () => {
     try {
       setFetchLoading(true);
       dispatch(setClassLoading(true));
-      
+
       const params = {
         page: 1,
         limit: 50,
-        ...filters
+        ...filters,
       };
-      
+
       const response = await getInstructorClasses(params);
       dispatch(setAllClasses(response.classes));
       dispatch(setPagination(response.pagination));
-      
     } catch (error) {
       console.error("Error fetching classes:", error);
       toast.error(error.message || "Failed to fetch classes");
@@ -58,14 +61,11 @@ const ClassSchedule = () => {
 
   // Refresh classes
   const handleRefresh = () => {
-    toast.promise(
-      fetchClasses(),
-      {
-        loading: 'Refreshing classes...',
-        success: 'Classes refreshed!',
-        error: 'Failed to refresh'
-      }
-    );
+    toast.promise(fetchClasses(), {
+      loading: "Refreshing classes...",
+      success: "Classes refreshed!",
+      error: "Failed to refresh",
+    });
   };
 
   // Handle create class
@@ -77,36 +77,49 @@ const ClassSchedule = () => {
   };
 
   // Handle delete class
- const handleDeleteClass = async (classId) => {
-  if (!classId) {
-    toast.error("Invalid class ID");
-    return;
-  }
+  const handleDeleteClass = async (classId) => {
+    if (!classId) {
+      toast.error("Invalid class ID");
+      return;
+    }
 
-  const confirmDelete = window.confirm(
-    "Are you sure you want to delete this class? This action cannot be undone."
-  );
-  if (!confirmDelete) return;
-
-  try {
-    const deletePromise = deleteClass(classId);
-    
-    await toast.promise(
-      deletePromise,
-      {
-        loading: 'Deleting class...',
-        success: 'Class deleted successfully!',
-        error: (err) => err?.message || 'Failed to delete class'
-      }
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this class? This action cannot be undone."
     );
+    if (!confirmDelete) return;
 
-    dispatch(removeClassData(classId));
+    try {
+      const deletePromise = deleteClass(classId);
 
+      await toast.promise(deletePromise, {
+        loading: "Deleting class...",
+        success: "Class deleted successfully!",
+        error: (err) => err?.message || "Failed to delete class",
+      });
 
-  } catch (error) {
-    console.error("Error deleting class:", error);
-  }
-};
+      dispatch(removeClassData(classId));
+    } catch (error) {
+      console.error("Error deleting class:", error);
+    }
+  };
+
+  const handleEditClass = async (classId, updatedData) => {
+    try {
+      const response = await updateClass(classId, updatedData);
+      toast.success("Class updated successfully!");
+      const updatedClasses = classData.map((cls) =>
+        cls._id === classId ? response.class : cls
+      );
+      dispatch(setAllClasses(updatedClasses));
+
+      setShowModal(false);
+      setEditMode(false);
+      setEditClassData(null);
+      return response;
+    } catch (error) {
+      toast.error(error.message || "Failed to update class");
+    }
+  };
 
   return (
     <>
@@ -116,10 +129,11 @@ const ClassSchedule = () => {
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Class Schedule</h1>
+              <h1 className="text-3xl font-bold text-gray-900">
+                Class Schedule
+              </h1>
               <p className="text-gray-600 mt-1">
                 Manage and schedule your classes
-           
               </p>
             </div>
             <div className="flex gap-3">
@@ -128,7 +142,10 @@ const ClassSchedule = () => {
                 disabled={fetchLoading}
                 className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
               >
-                <FiRefreshCw size={20} className={fetchLoading ? "animate-spin" : ""} />
+                <FiRefreshCw
+                  size={20}
+                  className={fetchLoading ? "animate-spin" : ""}
+                />
                 Refresh
               </button>
               <button
@@ -141,23 +158,36 @@ const ClassSchedule = () => {
             </div>
           </div>
 
-          {/* Class List */}
           <ClassList
             classes={classData}
             selectedFilter={selectedFilter}
             setSelectedFilter={setSelectedFilter}
             fetchLoading={fetchLoading}
             onDeleteClass={handleDeleteClass}
+            onEditClass={(classItem) => {
+              setEditMode(true);
+              setEditClassData(classItem);
+              setShowModal(true);
+            }}
           />
         </div>
       </div>
 
-      {/* Modal */}
       <ClassModal
         show={showModal}
-        onClose={() => setShowModal(false)}
-        onSubmit={handleCreateClass}
+        onClose={() => {
+          setShowModal(false);
+          setEditMode(false);
+          setEditClassData(null);
+        }}
+        onSubmit={
+          editMode
+            ? (data) => handleEditClass(editClassData._id, data)
+            : handleCreateClass
+        }
         instructorData={instructorData}
+        initialData={editClassData}
+        editMode={editMode}
       />
     </>
   );

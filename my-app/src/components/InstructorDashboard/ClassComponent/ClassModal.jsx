@@ -4,9 +4,16 @@ import { FiX } from "react-icons/fi";
 import toast from "react-hot-toast";
 import ClassForm from "./ClassForm";
 
-const ClassModal = ({ show, onClose, onSubmit, instructorData }) => {
+const ClassModal = ({
+  show,
+  onClose,
+  onSubmit,
+  instructorData,
+  initialData = null,
+  editMode = null,
+}) => {
   const [loading, setLoading] = useState(false);
-  
+
   const initialFormData = {
     className: "",
     description: "",
@@ -14,48 +21,63 @@ const ClassModal = ({ show, onClose, onSubmit, instructorData }) => {
     googleMeetLink: "",
     scheduledAt: "",
     duration: 60,
-    preReadLinks: []
+    preReadLinks: [],
   };
 
   const [formData, setFormData] = useState(initialFormData);
 
-  // Handle Escape key to close modal
+  useEffect(() => {
+    if (initialData && editMode) {
+      setFormData({
+        ...initialFormData,
+        ...initialData,
+        scheduledAt: initialData.scheduledAt
+          ? new Date(initialData.scheduledAt).toISOString().slice(0, 16)
+          : "",
+      });
+    } else {
+      setFormData(initialFormData);
+    }
+  }, [initialData, editMode, show]);
+
   useEffect(() => {
     const handleEscape = (e) => {
-      if (e.key === 'Escape' && show && !loading) {
+      if (e.key === "Escape" && show && !loading) {
         handleClose();
       }
     };
-    
-    window.addEventListener('keydown', handleEscape);
-    return () => window.removeEventListener('keydown', handleEscape);
+
+    window.addEventListener("keydown", handleEscape);
+    return () => window.removeEventListener("keydown", handleEscape);
   }, [show, loading]);
 
-  // Prevent body scroll when modal is open
   useEffect(() => {
     if (show) {
-      document.body.style.overflow = 'hidden';
+      document.body.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = "unset";
     }
     return () => {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = "unset";
     };
   }, [show]);
 
   const handleClose = () => {
     if (loading) return;
-    
+
     // Check if form has data
-    const hasData = formData.className || 
-                    formData.description || 
-                    formData.batch || 
-                    formData.googleMeetLink || 
-                    formData.scheduledAt || 
-                    formData.preReadLinks.length > 0;
+    const hasData =
+      formData.className ||
+      formData.description ||
+      formData.batch ||
+      formData.googleMeetLink ||
+      formData.scheduledAt ||
+      formData.preReadLinks.length > 0;
 
     if (hasData) {
-      const confirmClose = window.confirm("You have unsaved changes. Are you sure you want to close?");
+      const confirmClose = window.confirm(
+        "You have unsaved changes. Are you sure you want to close?"
+      );
       if (!confirmClose) return;
     }
 
@@ -65,9 +87,14 @@ const ClassModal = ({ show, onClose, onSubmit, instructorData }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     // Validation
-    if (!formData.className || !formData.batch || !formData.googleMeetLink || !formData.scheduledAt) {
+    if (
+      !formData.className ||
+      !formData.batch ||
+      !formData.googleMeetLink ||
+      !formData.scheduledAt
+    ) {
       toast.error("Please fill in all required fields");
       return;
     }
@@ -77,14 +104,14 @@ const ClassModal = ({ show, onClose, onSubmit, instructorData }) => {
       return;
     }
 
-    if (!formData.googleMeetLink.includes('meet.google.com')) {
+    if (!formData.googleMeetLink.includes("meet.google.com")) {
       toast.error("Please provide a valid Google Meet link");
       return;
     }
 
     const scheduledDate = new Date(formData.scheduledAt);
     const now = new Date();
-    
+
     if (scheduledDate < now) {
       toast.error("Cannot schedule classes in the past");
       return;
@@ -92,53 +119,41 @@ const ClassModal = ({ show, onClose, onSubmit, instructorData }) => {
 
     const thirtyMinutesFromNow = new Date(now.getTime() + 30 * 60000);
     if (scheduledDate < thirtyMinutesFromNow) {
-      const confirmSchedule = window.confirm("This class is scheduled within 30 minutes. Continue?");
+      const confirmSchedule = window.confirm(
+        "This class is scheduled within 30 minutes. Continue?"
+      );
       if (!confirmSchedule) return;
     }
 
     try {
       setLoading(true);
-      
+
       const classData = {
         className: formData.className.trim(),
         batch: formData.batch,
         googleMeetLink: formData.googleMeetLink.trim(),
         scheduledAt: scheduledDate.toISOString(),
-        duration: parseInt(formData.duration)
+        duration: parseInt(formData.duration),
+        description: formData.description.trim(),
+        preReadLinks: formData.preReadLinks,
       };
 
-      if (formData.description.trim()) {
-        classData.description = formData.description.trim();
-      }
-
-      if (formData.preReadLinks.length > 0) {
-        classData.preReadLinks = formData.preReadLinks;
-      }
-
       await onSubmit(classData);
-      
-      toast.success("Class scheduled successfully!");
-      onClose();
       setFormData(initialFormData);
-      
+
+      toast.success(
+        editMode
+          ? "Class updated successfully!"
+          : "Class scheduled successfully!"
+      );
     } catch (error) {
-      console.error("Error creating class:", error);
-      
-      const errorMessage = error.response?.data?.message || 
-                          error.response?.data?.error || 
-                          error.message || 
-                          "Failed to schedule class";
-      
+      console.error("Error saving class:", error);
+      const errorMessage =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        error.message ||
+        "Failed to save class";
       toast.error(errorMessage);
-      
-      if (error.response?.data?.errors) {
-        const errors = error.response.data.errors;
-        if (Array.isArray(errors)) {
-          errors.forEach(err => {
-            toast.error(`${err.path || err.field}: ${err.msg || err.message}`);
-          });
-        }
-      }
     } finally {
       setLoading(false);
     }

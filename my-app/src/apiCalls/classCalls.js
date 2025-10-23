@@ -69,7 +69,7 @@ export const deleteClass = async (classId) => {
 };
 export const updateClass = async (classId, classData) => {
   try {
-    const response = await api.put(`/classes/${classId}`, classData);
+    const response = await api.put(`/classes/instructor/class/${classId}`, classData);
     return response.data;
   } catch (error) {
     throw {

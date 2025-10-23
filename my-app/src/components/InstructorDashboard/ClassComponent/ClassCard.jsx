@@ -1,103 +1,110 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { 
-  FiCalendar, 
-  FiClock, 
-  FiUsers, 
-  FiEdit2, 
-  FiTrash2, 
-  FiExternalLink, 
-  FiLink 
+import {
+  FiCalendar,
+  FiClock,
+  FiUsers,
+  FiEdit2,
+  FiTrash2,
+  FiExternalLink,
+  FiLink,
 } from "react-icons/fi";
 import toast from "react-hot-toast";
+import { useState } from "react";
 
-const ClassCard = ({ classItem, index, onDelete }) => {
-  // Get class status - 'upcoming', 'ongoing', or 'completed'
+const ClassCard = ({ classItem, index, onDelete, onEdit }) => {
+  const [showModal, setShowModal] = useState(false);
+
   const getClassStatus = (scheduledAt, duration) => {
     const now = new Date();
     const startTime = new Date(scheduledAt);
-    const endTime = new Date(startTime.getTime() + duration * 60000); // duration in minutes
-    
-    if (now < startTime) return 'upcoming';
-    if (now >= startTime && now <= endTime) return 'ongoing';
-    return 'completed';
+    const endTime = new Date(startTime.getTime() + duration * 60000);
+
+    if (now < startTime) return "upcoming";
+    if (now >= startTime && now <= endTime) return "ongoing";
+    return "completed";
   };
 
-  // Format date for display
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    const options = { 
-      weekday: 'short', 
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    const options = {
+      weekday: "short",
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     };
-    return date.toLocaleDateString('en-US', options);
+    return date.toLocaleDateString("en-US", options);
   };
 
-  // Get time remaining or time since start
   const getTimeInfo = (scheduledAt, duration, status) => {
     const now = new Date();
     const startTime = new Date(scheduledAt);
     const endTime = new Date(startTime.getTime() + duration * 60000);
-    
-    if (status === 'completed') {
+
+    if (status === "completed") {
       return { text: "Class ended", type: "ended" };
     }
-    
-    if (status === 'ongoing') {
+
+    if (status === "ongoing") {
       const diff = endTime - now;
       const minutes = Math.floor(diff / (1000 * 60));
       if (minutes <= 0) return { text: "Ending now", type: "ending" };
-      if (minutes < 60) return { text: `${minutes} min remaining`, type: "ongoing" };
+      if (minutes < 60)
+        return { text: `${minutes} min remaining`, type: "ongoing" };
       const hours = Math.floor(minutes / 60);
       return { text: `${hours}h ${minutes % 60}m remaining`, type: "ongoing" };
     }
-    
-    // Upcoming
+
     const diff = startTime - now;
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
     const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    
-    if (days > 0) return { text: `In ${days} day${days > 1 ? 's' : ''}`, type: "upcoming" };
-    if (hours > 0) return { text: `In ${hours} hour${hours > 1 ? 's' : ''}`, type: "upcoming" };
+
+    if (days > 0)
+      return { text: `In ${days} day${days > 1 ? "s" : ""}`, type: "upcoming" };
+    if (hours > 0)
+      return {
+        text: `In ${hours} hour${hours > 1 ? "s" : ""}`,
+        type: "upcoming",
+      };
     if (minutes > 0) return { text: `In ${minutes} min`, type: "upcoming" };
     return { text: "Starting now", type: "starting" };
   };
 
   const status = getClassStatus(classItem.scheduledAt, classItem.duration);
-  const timeInfo = getTimeInfo(classItem.scheduledAt, classItem.duration, status);
-  const showMeetLink = status === 'upcoming' || status === 'ongoing';
+  const timeInfo = getTimeInfo(
+    classItem.scheduledAt,
+    classItem.duration,
+    status
+  );
+  const showMeetLink = status === "upcoming" || status === "ongoing";
 
-  // Get badge styling based on status
   const getBadgeStyle = (type) => {
-    switch(type) {
-      case 'ongoing':
-        return 'px-3 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full animate-pulse';
-      case 'ending':
-      case 'starting':
-        return 'px-3 py-1 bg-yellow-100 text-yellow-700 text-xs font-medium rounded-full';
-      case 'upcoming':
-        return 'px-3 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full';
-      case 'ended':
-        return 'px-3 py-1 bg-gray-200 text-gray-600 text-xs font-medium rounded-full';
+    switch (type) {
+      case "ongoing":
+        return "px-3 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full animate-pulse";
+      case "ending":
+      case "starting":
+        return "px-3 py-1 bg-yellow-100 text-yellow-700 text-xs font-medium rounded-full";
+      case "upcoming":
+        return "px-3 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full";
+      case "ended":
+        return "px-3 py-1 bg-gray-200 text-gray-600 text-xs font-medium rounded-full";
       default:
-        return 'px-3 py-1 bg-gray-200 text-gray-600 text-xs font-medium rounded-full';
+        return "px-3 py-1 bg-gray-200 text-gray-600 text-xs font-medium rounded-full";
     }
   };
 
-  // Get card border and background based on status
   const getCardStyle = () => {
-    if (status === 'ongoing') {
-      return 'border-blue-300 bg-blue-50/40 ring-2 ring-blue-200';
+    if (status === "ongoing") {
+      return "border-blue-300 bg-blue-50/40 ring-2 ring-blue-200";
     }
-    if (status === 'upcoming') {
-      return 'border-orange-200 bg-orange-50/30';
+    if (status === "upcoming") {
+      return "border-orange-200 bg-orange-50/30";
     }
-    return 'border-gray-200 bg-gray-50/30';
+    return "border-gray-200 bg-gray-50/30";
   };
 
   return (
@@ -108,7 +115,6 @@ const ClassCard = ({ classItem, index, onDelete }) => {
       className={`border rounded-xl p-6 hover:shadow-md transition-shadow ${getCardStyle()}`}
     >
       <div className="flex items-start justify-between">
-        {/* Left Section */}
         <div className="flex-1">
           <div className="flex items-center gap-3 mb-2">
             <h3 className="text-xl font-bold text-gray-900">
@@ -117,7 +123,7 @@ const ClassCard = ({ classItem, index, onDelete }) => {
             <span className={getBadgeStyle(timeInfo.type)}>
               {timeInfo.text}
             </span>
-            {status === 'ongoing' && (
+            {status === "ongoing" && (
               <span className="px-3 py-1 bg-red-500 text-white text-xs font-medium rounded-full">
                 LIVE NOW
               </span>
@@ -125,12 +131,9 @@ const ClassCard = ({ classItem, index, onDelete }) => {
           </div>
 
           {classItem.description && (
-            <p className="text-gray-600 mb-4">
-              {classItem.description}
-            </p>
+            <p className="text-gray-600 mb-4">{classItem.description}</p>
           )}
 
-          {/* Class Details */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             <div className="flex items-center gap-2 text-gray-700">
               <FiCalendar className="text-orange-600" size={18} />
@@ -148,7 +151,6 @@ const ClassCard = ({ classItem, index, onDelete }) => {
             </div>
           </div>
 
-          {/* Pre-Read Links */}
           {classItem.preReadLinks && classItem.preReadLinks.length > 0 && (
             <div className="mb-4">
               <p className="text-sm font-medium text-gray-700 mb-2">
@@ -172,43 +174,39 @@ const ClassCard = ({ classItem, index, onDelete }) => {
             </div>
           )}
 
-          {/* Meet Link - Show for upcoming AND ongoing classes */}
-          {showMeetLink && (
+          {status === "ongoing" && showMeetLink && (
             <a
               href={classItem.googleMeetLink}
               target="_blank"
               rel="noopener noreferrer"
               className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg transition-colors text-sm font-medium ${
-                status === 'ongoing'
-                  ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg'
-                  : 'bg-orange-600 hover:bg-orange-700 text-white'
+                status === "ongoing"
+                  ? "bg-blue-600 hover:bg-blue-700 text-white shadow-lg"
+                  : "bg-orange-600 hover:bg-orange-700 text-white"
               }`}
             >
               <FiExternalLink size={16} />
-              {status === 'ongoing' ? 'Join Class Now' : 'Join Google Meet'}
+              {status === "ongoing" ? "Join Class Now" : "Join Google Meet"}
             </a>
           )}
 
-          {/* Show ended message for completed classes */}
-          {status === 'completed' && (
+          {status === "completed" && (
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-600 rounded-lg text-sm font-medium">
               Class has ended
             </div>
           )}
         </div>
 
-        {/* Right Section - Actions */}
-        {status !== 'ongoing' && (
+        {status !== "ongoing" && status !== "completed" && (
           <div className="flex gap-2 ml-4">
             <button
-              onClick={() => {
-                toast.info("Edit feature coming soon!");
-              }}
+              onClick={() => onEdit(classItem)}
               className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
               title="Edit class"
             >
               <FiEdit2 size={18} />
             </button>
+
             <button
               onClick={() => onDelete(classItem._id)}
               className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
