@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 const classSchema = new mongoose.Schema({
-    clasName:{
+    className:{
         type: String,
         required: true,
         trim: true,
@@ -70,13 +70,21 @@ const classSchema = new mongoose.Schema({
     attendees:[{
         student: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'Student',
+            ref: 'student',
         },
         joinedAt: {
             type: Date,
         },
         leftAt: {
             type: Date,
+        }
+    }],
+    materials:[{
+        title:String,
+        url:String,
+        uploadedAt:{
+            type: Date,
+            default: Date.now
         }
     }],
     recordings:[{
@@ -87,14 +95,6 @@ const classSchema = new mongoose.Schema({
             default: Date.now
         }
     }],
-    createdAt:{
-        type: Date,
-        default: Date.now,
-    },
-    updatedAt:{
-        type: Date,
-        default: Date.now,
-    },
 },{timestamps: true});
 
 
@@ -108,7 +108,7 @@ classSchema.methods.updateStatus=function(){
     if(this.status==='cancelled'){
         return this.status;
     }
-    if(now < classEnd){
+    if(now < this.scheduledAt){
         this.status = 'scheduled';
     }else if(now >= this.scheduledAt && now < classEnd){
         this.status = 'ongoing';

@@ -175,11 +175,7 @@ function TeacherLogin() {
                 </button>
               </div>
 
-              <div className="text-right">
-                <a href="#" className="text-sm text-orange-600 hover:underline">
-                  Forgot Password?
-                </a>
-              </div>
+         
 
               <button
                 type="submit"
