@@ -185,17 +185,7 @@ const AssignmentSubmissions = () => {
                 </div>
               </div>
 
-              <div className="bg-white rounded-lg shadow p-4 border-l-4 border-purple-500">
-                <div className="flex items-center gap-3">
-                  <div className="bg-purple-100 p-3 rounded-full">
-                    <Award className="text-purple-600" size={20} />
-                  </div>
-                  <div>
-                    <p className="text-gray-600 text-sm">Average Score</p>
-                    <p className="text-2xl font-bold text-gray-800">{statistics.averageScore}</p>
-                  </div>
-                </div>
-              </div>
+           
             </div>
           )}
 

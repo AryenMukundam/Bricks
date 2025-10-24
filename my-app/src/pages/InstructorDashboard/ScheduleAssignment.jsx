@@ -1,15 +1,23 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Calendar, Plus, Trash2, X } from "lucide-react";
-import {
-  createAssignment,
-  getAssignmentById,
-  updateAssignment,
-} from "../../apiCalls/assignmentCalls";
-import Navbar from "../../components/BeforeLogin/Navbar";
+import { createAssignment , updateAssignment , getAssignmentById } from "../../apiCalls/assignmentCalls";
+
+
+
+
+
+// Mock Navbar component
+const Navbar = () => (
+  <nav className="bg-white shadow-sm border-b">
+    <div className="max-w-7xl mx-auto px-4 py-4">
+      <h1 className="text-xl font-bold text-gray-800">Assignment System</h1>
+    </div>
+  </nav>
+);
 
 export default function ScheduleAssignment() {
-  const { id } = useParams(); // Get assignment ID from URL if editing
+  const { id } = useParams();
   const navigate = useNavigate();
   const isEditMode = !!id;
 
@@ -21,7 +29,16 @@ export default function ScheduleAssignment() {
     dueDate: "",
     isPublished: true,
     questions: [],
+    settings: {
+      shuffleQuestions: false,
+      shuffleOptions: false,
+      showCorrectAnswers: true,
+      allowMultipleAttempts: false,
+      maxAttempts: 1,
+      timeLimit: null,
+    },
   });
+
   const [loading, setLoading] = useState(false);
   const [fetchingData, setFetchingData] = useState(isEditMode);
   const [message, setMessage] = useState({ type: "", text: "" });
@@ -35,7 +52,6 @@ export default function ScheduleAssignment() {
   });
   const [editingIndex, setEditingIndex] = useState(null);
 
-  // Fetch assignment data if in edit mode
   useEffect(() => {
     if (isEditMode) {
       fetchAssignmentData();
@@ -63,6 +79,16 @@ export default function ScheduleAssignment() {
         dueDate: localISOTime,
         isPublished: true,
         questions: assignment.questions || [],
+        settings: {
+          shuffleQuestions: assignment.settings?.shuffleQuestions || false,
+          shuffleOptions: assignment.settings?.shuffleOptions || false,
+          showCorrectAnswers: assignment.settings?.showCorrectAnswers !== undefined 
+            ? assignment.settings.showCorrectAnswers 
+            : true,
+          allowMultipleAttempts: assignment.settings?.allowMultipleAttempts || false,
+          maxAttempts: assignment.settings?.maxAttempts || 1,
+          timeLimit: assignment.settings?.timeLimit || null,
+        },
       });
     } catch (err) {
       setMessage({
@@ -79,6 +105,21 @@ export default function ScheduleAssignment() {
     setFormData((prev) => ({
       ...prev,
       [name]: type === "checkbox" ? checked : value,
+    }));
+  };
+
+  const handleSettingChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      settings: {
+        ...prev.settings,
+        [name]: type === "checkbox" 
+          ? checked 
+          : type === "number" 
+            ? (value === "" ? null : parseInt(value)) 
+            : value,
+      },
     }));
   };
 
@@ -409,6 +450,144 @@ export default function ScheduleAssignment() {
                     ))}
                   </div>
                 )}
+              </div>
+
+              {/* Assignment Settings */}
+              <div className="border-t pt-5">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                  <Calendar size={20} className="text-orange-600" />
+                  Assignment Settings
+                </h3>
+                
+                <div className="space-y-4">
+                  {/* Shuffle Questions */}
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        Shuffle Questions
+                      </label>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Randomize question order for each student
+                      </p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        name="shuffleQuestions"
+                        checked={formData.settings.shuffleQuestions}
+                        onChange={handleSettingChange}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-600"></div>
+                    </label>
+                  </div>
+
+                  {/* Shuffle Options */}
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        Shuffle Options
+                      </label>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Randomize answer choices for MCQ questions
+                      </p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        name="shuffleOptions"
+                        checked={formData.settings.shuffleOptions}
+                        onChange={handleSettingChange}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-600"></div>
+                    </label>
+                  </div>
+
+                  {/* Show Correct Answers */}
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        Show Correct Answers
+                      </label>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Allow students to see correct answers after submission
+                      </p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        name="showCorrectAnswers"
+                        checked={formData.settings.showCorrectAnswers}
+                        onChange={handleSettingChange}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-600"></div>
+                    </label>
+                  </div>
+
+                  {/* Multiple Attempts */}
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        Allow Multiple Attempts
+                      </label>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Let students submit multiple times
+                      </p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        name="allowMultipleAttempts"
+                        checked={formData.settings.allowMultipleAttempts}
+                        onChange={handleSettingChange}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-600"></div>
+                    </label>
+                  </div>
+
+                  {/* Max Attempts - Conditional */}
+                  {formData.settings.allowMultipleAttempts && (
+                    <div className="p-3 bg-blue-50 rounded-md border border-blue-200">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Maximum Attempts
+                      </label>
+                      <input
+                        type="number"
+                        name="maxAttempts"
+                        value={formData.settings.maxAttempts}
+                        onChange={handleSettingChange}
+                        min="1"
+                        max="10"
+                        className="w-32 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Maximum number of submission attempts allowed
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Time Limit */}
+                  <div className="p-3 bg-gray-50 rounded-md">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Time Limit (minutes)
+                    </label>
+                    <input
+                      type="number"
+                      name="timeLimit"
+                      value={formData.settings.timeLimit || ""}
+                      onChange={handleSettingChange}
+                      min="1"
+                      placeholder="No limit"
+                      className="w-32 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Leave empty for no time limit
+                    </p>
+                  </div>
+                </div>
               </div>
 
               {message.text && (
