@@ -8,6 +8,7 @@ import studentRoutes from './routes/student.route.js'
 import instructorRoutes from './routes/instructor.route.js'
 import classRoutes from './routes/class.route.js'
 import cookieParser from 'cookie-parser';
+import assignmentRoutes from './routes/assignment.route.js'
 
 connectToDB();
 
@@ -27,5 +28,6 @@ app.get('/' , (req , res) =>{
 app.use('/students' , studentRoutes);
 app.use('/instructors' , instructorRoutes);
 app.use('/classes' , classRoutes);
+app.use('/assignments' , assignmentRoutes);
 
 export default app;

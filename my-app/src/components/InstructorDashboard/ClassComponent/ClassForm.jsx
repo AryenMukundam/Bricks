@@ -98,11 +98,11 @@ const ClassForm = ({
           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
           required
           minLength={3}
-          maxLength={20}
+          maxLength={30}
           disabled={loading}
         />
         <p className="text-xs text-gray-500 mt-1">
-          {formData.className.length}/20 characters
+          {formData.className.length}/30 characters
         </p>
       </div>
 

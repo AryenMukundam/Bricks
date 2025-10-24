@@ -16,6 +16,8 @@ import ForgotPassword from "./pages/StudentDashboard/ForgotPassword";
 import InstructorProfile from "./pages/InstructorDashboard/InstructorProfile";
 import ClassSchedule from "./pages/InstructorDashboard/ClassSchedule";
 import AllClass from "./pages/StudentDashboard/AllClass";
+import ScheduleAssignment from "./pages/InstructorDashboard/ScheduleAssignment";
+import AllAssignments from "./pages/InstructorDashboard/AllAssignments";
 
 const getCookie = (name) => {
   const value = `; ${document.cookie}`;
@@ -203,6 +205,24 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={["instructor"]}>
               <ClassSchedule />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/instructor/assignments"
+          element={
+            <ProtectedRoute allowedRoles={["instructor"]}>
+              <AllAssignments />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/assignment-schedule"
+          element={
+            <ProtectedRoute allowedRoles={["instructor"]}>
+              <ScheduleAssignment />
             </ProtectedRoute>
           }
         />
