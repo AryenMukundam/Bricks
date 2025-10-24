@@ -23,14 +23,12 @@ const AllAssignments = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  // ✅ Pull global state from Redux
   const { assignmentData: assignments, loading, error, pagination } = useSelector(
     (state) => state.assignment
   );
 
   useEffect(() => {
     fetchAssignments();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pagination.currentPage]);
 
   const fetchAssignments = async () => {
@@ -44,7 +42,6 @@ const AllAssignments = () => {
 
       const response = await getInstructorAssignments(params);
 
-      // ✅ Store globally
       dispatch(setAllAssignments(response.assignments));
       dispatch(setPagination(response.pagination));
       dispatch(setError(null));

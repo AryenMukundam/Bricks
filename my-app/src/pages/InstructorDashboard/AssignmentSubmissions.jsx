@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
-  ArrowLeft, Users, Calendar, Award, CheckCircle, 
-  XCircle, Clock, FileText, TrendingUp, Filter, Search
+  ArrowLeft, Users, Calendar, Award, Clock, 
+  FileText, TrendingUp, XCircle 
 } from 'lucide-react';
 import { getAssignmentSubmissions } from '../../apiCalls/assignmentCalls';
 import Navbar from '../../components/InstructorDashboard/Navbar';
@@ -17,7 +17,7 @@ const AssignmentSubmissions = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all'); // all, graded, pending
+  const [filterStatus, setFilterStatus] = useState('all');
 
   useEffect(() => {
     fetchSubmissions();
@@ -49,27 +49,11 @@ const AssignmentSubmissions = () => {
     });
   };
 
-  const getScoreColor = (score, totalPoints) => {
-    const percentage = (score / totalPoints) * 100;
-    if (percentage >= 80) return 'text-green-600 bg-green-50 border-green-200';
-    if (percentage >= 60) return 'text-blue-600 bg-blue-50 border-blue-200';
-    if (percentage >= 40) return 'text-orange-600 bg-orange-50 border-orange-200';
-    return 'text-red-600 bg-red-50 border-red-200';
-  };
-
-  const getScorePercentage = (score, totalPoints) => {
-    return totalPoints > 0 ? ((score / totalPoints) * 100).toFixed(1) : 0;
-  };
-
   const filteredSubmissions = submissions.filter(submission => {
-    const matchesSearch = submission.studentName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         submission.student?.enrollmentNumber?.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesFilter = filterStatus === 'all' || 
-                         (filterStatus === 'graded' && submission.score !== null) ||
-                         (filterStatus === 'pending' && submission.score === null);
-    
-    return matchesSearch && matchesFilter;
+    const matchesSearch =
+      submission.studentName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      submission.student?.enrollmentNumber?.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesSearch;
   });
 
   if (loading) {
@@ -164,7 +148,7 @@ const AssignmentSubmissions = () => {
               <div className="bg-white rounded-lg shadow p-4 border-l-4 border-green-500">
                 <div className="flex items-center gap-3">
                   <div className="bg-green-100 p-3 rounded-full">
-                    <CheckCircle className="text-green-600" size={20} />
+                    <Clock className="text-green-600" size={20} />
                   </div>
                   <div>
                     <p className="text-gray-600 text-sm">Submissions</p>
@@ -184,12 +168,8 @@ const AssignmentSubmissions = () => {
                   </div>
                 </div>
               </div>
-
-           
             </div>
           )}
-
-        
 
           {/* Submissions List */}
           <div className="bg-white rounded-lg shadow-lg border border-orange-200 overflow-hidden">
@@ -213,12 +193,6 @@ const AssignmentSubmissions = () => {
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                         Submitted At
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                        Score
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                        Status
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                         Actions
@@ -256,35 +230,6 @@ const AssignmentSubmissions = () => {
                             {formatDate(submission.submittedAt)}
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {submission.score !== null ? (
-                            <div className="flex items-center gap-2">
-                              <span className={`px-3 py-1 rounded-lg border font-bold ${getScoreColor(submission.score, assignment?.totalPoints || 100)}`}>
-                                {submission.score}/{assignment?.totalPoints || 100}
-                              </span>
-                              <span className="text-sm text-gray-500">
-                                ({getScorePercentage(submission.score, assignment?.totalPoints || 100)}%)
-                              </span>
-                            </div>
-                          ) : (
-                            <span className="px-3 py-1 bg-gray-100 text-gray-600 rounded-lg text-sm">
-                              Not graded
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {submission.score !== null ? (
-                            <span className="flex items-center gap-1 text-green-600">
-                              <CheckCircle size={16} />
-                              Graded
-                            </span>
-                          ) : (
-                            <span className="flex items-center gap-1 text-orange-600">
-                              <Clock size={16} />
-                              Pending
-                            </span>
-                          )}
-                        </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm">
                           <button
                             onClick={() => navigate(`/assignment/${id}/submission/${submission._id}`)}
@@ -303,26 +248,13 @@ const AssignmentSubmissions = () => {
                 <XCircle size={48} className="mx-auto text-gray-400 mb-4" />
                 <p className="text-gray-600 text-lg font-medium mb-2">No Submissions Found</p>
                 <p className="text-gray-500">
-                  {searchTerm || filterStatus !== 'all' 
-                    ? 'Try adjusting your search or filters' 
+                  {searchTerm || filterStatus !== 'all'
+                    ? 'Try adjusting your search or filters'
                     : 'No students have submitted this assignment yet'}
                 </p>
               </div>
             )}
           </div>
-
-          {/* Export Button */}
-          {filteredSubmissions.length > 0 && (
-            <div className="mt-6 flex justify-end">
-              <button
-                onClick={() => alert('Export functionality coming soon!')}
-                className="px-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 font-medium flex items-center gap-2"
-              >
-                <FileText size={18} />
-                Export to CSV
-              </button>
-            </div>
-          )}
         </div>
       </div>
     </>

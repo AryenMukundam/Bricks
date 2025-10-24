@@ -436,6 +436,14 @@ const gradeSubmission = async (req, res) => {
 const getStudentAssignments = async (req, res) => {
     try {
         const student = req.student;
+        
+        // Validate student object
+        if (!student || !student.batch) {
+            return res.status(400).json({ 
+                errors: [{ msg: 'Invalid student data' }] 
+            });
+        }
+
         const { status, page = 1, limit = 10 } = req.query;
 
         const query = {
@@ -446,40 +454,80 @@ const getStudentAssignments = async (req, res) => {
 
         const skip = (parseInt(page) - 1) * parseInt(limit);
 
+        // Fetch assignments with proper error handling
         const assignments = await assignmentModel.find(query)
             .sort({ dueDate: -1 })
             .skip(skip)
             .limit(parseInt(limit))
-            .select('-submissions -questions.options.isCorrect -questions.correctAnswer');
+            .select('-submissions.answers') // Don't send other students' answers
+            .lean(); // Use lean for better performance
 
         const total = await assignmentModel.countDocuments(query);
 
-        let filteredAssignments = assignments.map(assignment => {
-            const assignmentObj = assignment.toObject();
-            const hasSubmitted = assignment.hasSubmitted(student._id);
-            const submission = assignment.getSubmission(student._id);
+        // Process assignments with proper null checks
+        let processedAssignments = assignments.map(assignment => {
+            try {
+                const hasSubmitted = assignment.submissions?.some(
+                    sub => sub.student?.toString() === student._id.toString()
+                ) || false;
 
-            assignmentObj.hasSubmitted = hasSubmitted;
-            assignmentObj.canSubmit = assignment.canSubmit();
-            assignmentObj.mySubmission = submission ? {
-                submittedAt: submission.submittedAt,
-                score: submission.score,
-                feedback: submission.feedback
-            } : null;
+                const submission = assignment.submissions?.find(
+                    sub => sub.student?.toString() === student._id.toString()
+                );
 
-            return assignmentObj;
-        });
+                const now = new Date();
+                const dueDate = new Date(assignment.dueDate);
+                const canSubmit = assignment.isPublished && 
+                                 !assignment.isLocked && 
+                                 now <= dueDate;
 
+                return {
+                    _id: assignment._id,
+                    title: assignment.title,
+                    description: assignment.description,
+                    batch: assignment.batch,
+                    instructorName: assignment.instructorName,
+                    assignmentType: assignment.assignmentType,
+                    totalPoints: assignment.totalPoints || 0,
+                    dueDate: assignment.dueDate,
+                    isLocked: assignment.isLocked,
+                    publishedAt: assignment.publishedAt,
+                    createdAt: assignment.createdAt,
+                    questions: assignment.questions?.map(q => ({
+                        _id: q._id,
+                        questionText: q.questionText,
+                        questionType: q.questionType,
+                        points: q.points
+                    })) || [],
+                    hasSubmitted,
+                    canSubmit,
+                    mySubmission: submission ? {
+                        _id: submission._id,
+                        submittedAt: submission.submittedAt,
+                        score: submission.score,
+                        feedback: submission.feedback,
+                        gradedAt: submission.gradedAt
+                    } : null
+                };
+            } catch (err) {
+                console.error('Error processing assignment:', assignment._id, err);
+                return null;
+            }
+        }).filter(a => a !== null); // Remove any failed assignments
+
+        // Apply status filter
         if (status === 'pending') {
-            filteredAssignments = filteredAssignments.filter(a => !a.hasSubmitted);
+            processedAssignments = processedAssignments.filter(a => !a.hasSubmitted);
         } else if (status === 'submitted') {
-            filteredAssignments = filteredAssignments.filter(a => a.hasSubmitted);
+            processedAssignments = processedAssignments.filter(a => a.hasSubmitted);
         } else if (status === 'graded') {
-            filteredAssignments = filteredAssignments.filter(a => a.mySubmission?.score !== null);
+            processedAssignments = processedAssignments.filter(
+                a => a.mySubmission?.score !== null && a.mySubmission?.score !== undefined
+            );
         }
 
         res.status(200).json({
-            assignments: filteredAssignments,
+            assignments: processedAssignments,
             pagination: {
                 currentPage: parseInt(page),
                 totalPages: Math.ceil(total / parseInt(limit)),
@@ -490,7 +538,12 @@ const getStudentAssignments = async (req, res) => {
 
     } catch (err) {
         console.error('Get student assignments error:', err);
-        res.status(500).json({ errors: [{ msg: 'Server error while fetching assignments' }] });
+        res.status(500).json({ 
+            errors: [{ 
+                msg: 'Server error while fetching assignments',
+                details: process.env.NODE_ENV === 'development' ? err.message : undefined
+            }] 
+        });
     }
 };
 

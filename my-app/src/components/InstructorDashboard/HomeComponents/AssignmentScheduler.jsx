@@ -67,7 +67,8 @@ export default function AssignmentScheduler() {
           {recentAssignments.map((a) => (
             <div
               key={a._id}
-              className="border border-orange-100 rounded-lg p-4 bg-orange-50/50 hover:bg-orange-50"
+              onClick={() => navigate(`/assignment/${a._id}`)} // ✅ added navigation here
+              className="border border-orange-100 rounded-lg p-4 bg-orange-50/50 hover:bg-orange-50 cursor-pointer transition"
             >
               <div className="flex justify-between items-start mb-2">
                 <h3 className="text-lg font-semibold text-gray-800 flex-1 pr-4">

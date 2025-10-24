@@ -347,7 +347,6 @@ export default function ScheduleAssignment() {
                     <option value="mcq">Multiple Choice</option>
                     <option value="multiple_correct">Multiple Correct</option>
                     <option value="text">Text Answer</option>
-                    <option value="image_upload">Image Upload</option>
                     <option value="mixed">Mixed</option>
                   </select>
                 </div>
@@ -672,7 +671,6 @@ export default function ScheduleAssignment() {
                           Multiple Correct
                         </option>
                         <option value="text">Text</option>
-                        <option value="image_upload">Image Upload</option>
                       </select>
                     </div>
                   )}
