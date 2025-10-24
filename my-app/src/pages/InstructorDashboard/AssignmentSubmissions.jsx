@@ -49,6 +49,10 @@ const AssignmentSubmissions = () => {
     });
   };
 
+  const handleViewDetails = () => {
+    alert('Coming Soon! 🚀\n\nSubmission details feature will be available soon.');
+  };
+
   const filteredSubmissions = submissions.filter(submission => {
     const matchesSearch =
       submission.studentName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -232,7 +236,7 @@ const AssignmentSubmissions = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm">
                           <button
-                            onClick={() => navigate(`/assignment/${id}/submission/${submission._id}`)}
+                            onClick={handleViewDetails}
                             className="text-orange-600 hover:text-orange-700 font-medium"
                           >
                             View Details →
