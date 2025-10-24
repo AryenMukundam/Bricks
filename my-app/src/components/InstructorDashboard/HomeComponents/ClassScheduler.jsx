@@ -153,7 +153,7 @@ const ClassScheduler = () => {
   };
 
   return (
-    <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-xl border border-gray-200 p-6">
+    <div className="bg-[#fff8f2] from-white to-gray-50 rounded-2xl shadow-xl border border-gray-200 p-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>

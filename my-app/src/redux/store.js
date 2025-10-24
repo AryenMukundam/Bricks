@@ -5,17 +5,18 @@ import { combineReducers } from '@reduxjs/toolkit';
 import studentSlicereducer from "./studentSlice.js";
 import instructorSlicereducer from "./instructorSlice.js";
 import classSlicereducer from "./classSlice.js"
-
+import assignmentSlicereducer from "./assignmentSlice.js";
 const rootReducer = combineReducers({
     student: studentSlicereducer,
     instructor: instructorSlicereducer,
-    class: classSlicereducer
+    class: classSlicereducer,
+    assignment: assignmentSlicereducer
 });
 
 const persistConfig = {
     key: 'root',
     storage,
-    whitelist: ['student', 'instructor']
+    whitelist: ['student', 'instructor' , 'class' , 'assignment']
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

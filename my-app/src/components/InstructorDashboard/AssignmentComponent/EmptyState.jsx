@@ -1,4 +1,3 @@
-// ==================== EmptyState.jsx ====================
 import { useNavigate } from 'react-router-dom';
 import { Calendar, Plus } from 'lucide-react';
 
@@ -11,7 +10,7 @@ export const EmptyState = () => {
       <h3 className="text-xl font-semibold text-gray-700 mb-2">No assignments found</h3>
       <p className="text-gray-500 mb-6">Get started by creating your first assignment</p>
       <button
-        onClick={() => navigate('/schedule-assignment')}
+        onClick={() => navigate('/assignment-schedule')}
         className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white px-6 py-3 rounded-lg font-semibold inline-flex items-center gap-2"
       >
         <Plus size={20} />

@@ -26,19 +26,31 @@ const ClassModal = ({
 
   const [formData, setFormData] = useState(initialFormData);
 
+    const formatToLocalISOString = (dateString) => {
+  if (!dateString) return "";
+  const dateObj = new Date(dateString);
+  const localISOTime = new Date(
+    dateObj.getTime() - dateObj.getTimezoneOffset() * 60000
+  )
+    .toISOString()
+    .slice(0, 16);
+  return localISOTime;
+};
+
   useEffect(() => {
     if (initialData && editMode) {
       setFormData({
         ...initialFormData,
         ...initialData,
-        scheduledAt: initialData.scheduledAt
-          ? new Date(initialData.scheduledAt).toISOString().slice(0, 16)
-          : "",
+        scheduledAt: formatToLocalISOString(initialData.scheduledAt),
+
       });
     } else {
       setFormData(initialFormData);
     }
   }, [initialData, editMode, show]);
+
+
 
   useEffect(() => {
     const handleEscape = (e) => {

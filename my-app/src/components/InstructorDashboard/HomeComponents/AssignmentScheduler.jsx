@@ -1,68 +1,120 @@
-import { useState } from 'react';
-import { Calendar, Plus } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { Calendar, ArrowRight, Clock, Lock, CheckCircle } from "lucide-react";
+import { setAllAssignments, setLoading, setError } from "../../../redux/assignmentSlice";
 
 export default function AssignmentScheduler() {
-  const [title, setTitle] = useState('');
-  const [dueDate, setDueDate] = useState('');
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { assignmentData, loading } = useSelector((state) => state.assignment);
+  const { instructorData } = useSelector((state) => state.instructor);
 
-  const handleCreateAssignment = () => {
-    if (title && dueDate) {
-      // In a real app, save the assignment here
-      window.location.href = '/assignment-schedule';
-    }
-  };
+  useEffect(() => {
+    const fetchAssignments = async () => {
+      if (assignmentData.length === 0 && instructorData?._id) {
+        dispatch(setLoading(true));
+        try {
+          const response = await fetch(`/api/assignments?instructorId=${instructorData._id}`);
+          if (!response.ok) throw new Error('Failed to fetch assignments');
+          const data = await response.json();
+          dispatch(setAllAssignments(data));
+        } catch (error) {
+          console.error('Error fetching assignments:', error);
+          dispatch(setError(error.message));
+        } finally {
+          dispatch(setLoading(false));
+        }
+      }
+    };
 
-  const navigate = useNavigate()
+    fetchAssignments();
+  }, [dispatch, instructorData?._id, assignmentData.length]);
 
-  return (
-    <div className="min-h-screen bg-gray-50 p-6 flex items-center justify-center">
-      <div className="max-w-md w-full bg-white rounded-lg shadow-md p-8">
-        <h1 className="text-2xl font-bold text-gray-800 mb-6">Create Assignment</h1>
-        
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Title
-            </label>
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              placeholder="Assignment title"
-            />
-          </div>
+  const recentAssignments = assignmentData.slice(0, 3);
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Due Date
-            </label>
-            <input
-              type="date"
-              value={dueDate}
-              onChange={(e) => setDueDate(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            />
-          </div>
-
-          <button
-            onClick={handleCreateAssignment}
-            className="w-full bg-indigo-600 text-white py-3 rounded-md hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2 mt-6"
-          >
-            <Plus size={20} />
-            Create & View Schedule
-          </button>
-
-          <button
-            onClick={()=>{navigate('/instructor/assignments')}}
-            className="w-full bg-indigo-600 text-white py-3 rounded-md hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2 mt-6"
-          >
-            <Plus size={20} />
-            View more
-          </button>
+  if (loading) {
+    return (
+      <div className="bg-white rounded-lg shadow p-6 border border-orange-200">
+        <div className="text-center py-12">
+          <p className="text-gray-500">Loading assignments...</p>
         </div>
       </div>
+    );
+  }
+
+  return (
+    <div className="bg-white rounded-lg shadow p-6 border border-orange-200">
+      <div className="flex items-center justify-between mb-5">
+        <h2 className="text-2xl font-bold text-orange-600">Recent Assignments</h2>
+        <button
+          onClick={() => navigate("/instructor/assignments")}
+          className="px-4 py-2 bg-orange-500 text-white rounded-lg font-medium hover:bg-orange-600 flex items-center gap-2"
+        >
+          View All 
+          <ArrowRight size={16} />
+        </button>
+      </div>
+
+      {recentAssignments.length === 0 ? (
+        <div className="text-center py-12 bg-orange-50 rounded-lg">
+          <Calendar size={48} className="text-black-300 mx-auto mb-3" />
+          <p className="text-gray-600 font-medium">No assignments created yet</p>
+          <p className="text-gray-500 text-sm mt-1">Create your first assignment to get started</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {recentAssignments.map((a) => (
+            <div
+              key={a._id}
+              className="border border-orange-100 rounded-lg p-4 bg-orange-50/50 hover:bg-orange-50"
+            >
+              <div className="flex justify-between items-start mb-2">
+                <h3 className="text-lg font-semibold text-gray-800 flex-1 pr-4">
+                  {a.title}
+                </h3>
+                <span
+                  className={`px-3 py-1 text-xs font-semibold rounded-full flex items-center gap-1 ${
+                    a.isLocked
+                      ? "bg-red-100 text-red-700"
+                      : "bg-green-100 text-green-700"
+                  }`}
+                >
+                  {a.isLocked ? (
+                    <>
+                      <Lock size={12} /> Locked
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle size={12} /> Active
+                    </>
+                  )}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-4 mb-2 text-green-700 text-sm">
+                <div className="flex items-center gap-1">
+                  <Calendar size={14} />
+                  <span>{new Date(a.dueDate).toLocaleDateString()}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Clock size={14} />
+                  <span>
+                    {new Date(a.dueDate).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </span>
+                </div>
+              </div>
+
+              <p className="text-gray-600 text-sm line-clamp-2">
+                {a.description || "No description provided."}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

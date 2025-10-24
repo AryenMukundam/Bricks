@@ -81,24 +81,24 @@ export const AssignmentCard = ({ assignment, onToggleLock, onPublish, onDelete }
             Submissions ({assignment.submissionCount || 0})
           </button>
 
-          {!assignment.isPublished && (
-            <>
-              <button
-                onClick={() => navigate(`/edit-assignment/${assignment._id}`)}
-                className="flex items-center gap-2 px-4 py-2 bg-amber-100 text-amber-700 rounded-lg hover:bg-amber-200 transition-colors"
-              >
-                <Edit2 size={16} />
-                Edit
-              </button>
+          {/* Edit button - now available for all assignments */}
+          <button
+            onClick={() => navigate(`/edit-assignment/${assignment._id}`)}
+            className="flex items-center gap-2 px-4 py-2 bg-amber-100 text-amber-700 rounded-lg hover:bg-amber-200 transition-colors"
+          >
+            <Edit2 size={16} />
+            Edit
+          </button>
 
-              <button
-                onClick={() => onPublish(assignment._id)}
-                className="flex items-center gap-2 px-4 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors"
-              >
-                <CheckCircle size={16} />
-                Publish
-              </button>
-            </>
+          {/* Publish button - only for drafts */}
+          {!assignment.isPublished && (
+            <button
+              onClick={() => onPublish(assignment._id)}
+              className="flex items-center gap-2 px-4 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors"
+            >
+              <CheckCircle size={16} />
+              Publish
+            </button>
           )}
 
           <button

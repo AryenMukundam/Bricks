@@ -18,6 +18,9 @@ import ClassSchedule from "./pages/InstructorDashboard/ClassSchedule";
 import AllClass from "./pages/StudentDashboard/AllClass";
 import ScheduleAssignment from "./pages/InstructorDashboard/ScheduleAssignment";
 import AllAssignments from "./pages/InstructorDashboard/AllAssignments";
+import AssignmentDetail from "./pages/InstructorDashboard/AssignmentDetail";
+import AssignmentSubmissions from "./pages/InstructorDashboard/AssignmentSubmissions";
+
 
 const getCookie = (name) => {
   const value = `; ${document.cookie}`;
@@ -223,6 +226,32 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={["instructor"]}>
               <ScheduleAssignment />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/edit-assignment/:id"
+          element={
+            <ProtectedRoute allowedRoles={["instructor"]}>
+              <ScheduleAssignment />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/assignment/:id"
+          element={
+            <ProtectedRoute allowedRoles={["instructor"]}>
+              <AssignmentDetail />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/assignment/:id/submissions"
+          element={
+            <ProtectedRoute allowedRoles={["instructor"]}>
+              <AssignmentSubmissions />
             </ProtectedRoute>
           }
         />
