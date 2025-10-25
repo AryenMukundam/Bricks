@@ -16,7 +16,7 @@ const port = process.env.PORT || 3000;
 connectToDB();
 
 app.use(cors({
-  origin: "*",
+  origin: "https://bricks.org.in",
   credentials: true, 
 }));
 app.use(express.json());
