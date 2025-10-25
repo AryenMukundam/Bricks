@@ -4,6 +4,65 @@ import bcrypt from "bcrypt";
 import blacklistTokenModel from "../models/blacklistToken.model.js";
 import otpService from "../services/otp.service.js";
 
+const register = async(req, res) => {
+    try {
+        const errors = validationResult(req);
+        if(!errors.isEmpty()){
+            return res.status(400).json({errors: errors.array()});
+        }
+
+        const {firstname, lastname, email, password, enrollmentNumber, school, grade, batch} = req.body;
+
+        const existingStudent = await studentModel.findOne({
+            $or: [{email}, {enrollmentNumber}]
+        });
+
+        if(existingStudent){
+            if(existingStudent.email === email){
+                return res.status(400).json({errors: [{msg: 'Email already registered'}]});
+            }
+            if(existingStudent.enrollmentNumber === enrollmentNumber){
+                return res.status(400).json({errors: [{msg: 'Enrollment number already registered'}]});
+            }
+        }
+
+        const student = await studentModel.create({
+            fullname: {
+                firstname,
+                lastname
+            },
+            email,
+            password,
+            enrollmentNumber,
+            school,
+            grade,
+            batch,
+            mustChangePassword: true,
+            isFirstLogin: true
+        });
+
+        // Generate temporary token for password change
+        const tempToken = student.generateTempToken();
+
+        // Send response without password
+        const studentResponse = student.toObject();
+        delete studentResponse.password;
+
+        res.status(201).json({
+            msg: 'Student registered successfully. Please change your password on first login.',
+            mustChangePassword: true,
+            isFirstLogin: true,
+            tempToken,
+            student: studentResponse
+        });
+
+    } catch(err) {
+        console.error('Register error:', err);
+        res.status(500).json({errors: [{msg: 'Server error during registration'}]});
+    }
+}
+
+
 const login = async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -427,4 +486,5 @@ export default {
   resetPassword,
   requestPasswordChangeOTP,
   verifyOTPAndChangePassword,
+  register
 };

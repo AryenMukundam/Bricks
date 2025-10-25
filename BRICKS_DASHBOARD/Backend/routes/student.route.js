@@ -4,6 +4,17 @@ import studentController from '../controllers/student.controller.js';
 import authMiddleware from '../middleware/auth.middleware.js';
 import {body} from 'express-validator';
 
+router.post('/register', [
+    body('firstname').isLength({min: 3}).withMessage('First name must be at least 3 characters long'),
+    body('lastname').optional().isLength({min: 3}).withMessage('Last name must be at least 3 characters long'),
+    body('email').isEmail().withMessage('Valid email is required'),
+    body('password').isLength({min: 6}).withMessage('Password must be at least 6 characters long'),
+    body('enrollmentNumber').isLength({min: 5, max: 20}).withMessage('Enrollment number must be between 5 to 20 characters long'),
+    body('school').notEmpty().withMessage('School is required'),
+    body('grade').notEmpty().withMessage('Grade is required'),
+    body('batch').notEmpty().withMessage('Batch is required')
+], studentController.register);
+
 router.post('/login' , [
     body('enrollmentNumber').isLength({min:5 , max:20}).withMessage('Enrollment number must be between 5 to 20 characters long'),
     body('password').isLength({min:6}).withMessage('Password must be at least 6 characters long')
