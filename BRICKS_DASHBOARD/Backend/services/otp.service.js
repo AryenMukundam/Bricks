@@ -1,161 +1,94 @@
-import dotenv from 'dotenv';
+import dotenv from "dotenv";
 dotenv.config();
-import nodemailer from 'nodemailer';
-import crypto from 'crypto';
+import crypto from "crypto";
+import { sendMail } from "../config/mail.config.js";
 
 class OTPService {
-    constructor() {
-        this.transporter = nodemailer.createTransport({
-            host: process.env.EMAIL_HOST,
-            port: Number(process.env.EMAIL_PORT),
-            secure: process.env.EMAIL_SECURE === 'true',
-            auth: {
-                user: process.env.EMAIL_USER,
-                pass: process.env.EMAIL_PASSWORD
-            },
-            pool: true,
-            maxConnections: 5,
-            maxMessages: 100
-        });
+  constructor() {
+    this.rateLimits = new Map();
+    this.MAX_OTP_PER_HOUR = 3;
+  }
 
-        this.transporter.verify((error, success) => {
-            if (error) {
-                console.error('SMTP Configuration Error:', error);
-            } else {
-                console.log('Email service ready');
-            }
-        });
+  isValidEmail(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  }
 
-        this.rateLimits = new Map();
-        this.MAX_OTP_PER_HOUR = 5;
+  checkRateLimit(email) {
+    const now = Date.now();
+    const limit = this.rateLimits.get(email);
+
+    if (!limit || now > limit.resetTime) {
+      this.rateLimits.set(email, { count: 1, resetTime: now + 3600000 });
+      return true;
     }
 
-    isValidEmail(email) {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return emailRegex.test(email);
+    if (limit.count >= this.MAX_OTP_PER_HOUR) return false;
+
+    limit.count++;
+    return true;
+  }
+
+  hashOTP(otp) {
+    return crypto.createHash("sha256").update(otp.toString()).digest("hex");
+  }
+
+  verifyOTP(otp, hash) {
+    return this.hashOTP(otp) === hash;
+  }
+
+  async sendOTP(email, otp, studentName) {
+    try {
+      if (!email || !otp || !studentName)
+        return { success: false, error: "Missing required parameters" };
+
+      if (!this.isValidEmail(email))
+        return { success: false, error: "Invalid email format" };
+
+      if (!this.checkRateLimit(email))
+        return {
+          success: false,
+          error: "Too many OTP requests. Try again later.",
+        };
+
+      const mailOptions = {
+        from: `"BRICKS Education" <${process.env.EMAIL_USER}>`,
+        to: email,
+        subject: "Password Change OTP - BRICKS Dashboard",
+        html: this.getOTPEmailTemplate(studentName, otp),
+      };
+
+      await sendMail(mailOptions);
+
+      return { success: true, messageId: 1, otpHash: this.hashOTP(otp) };
+    } catch (error) {
+      console.error("Email sending error:", error);
+      return { success: false, error: "Failed to send email." };
     }
+  }
 
-    checkRateLimit(email) {
-        const now = Date.now();
-        const limit = this.rateLimits.get(email);
+  async sendPasswordChangeConfirmation(email, studentName) {
+    try {
+      if (!this.isValidEmail(email))
+        return { success: false, error: "Invalid email format" };
 
-        if (!limit) {
-            this.rateLimits.set(email, { count: 1, resetTime: now + 3600000 });
-            return true;
-        }
+      const mailOptions = {
+        from: `"BRICKS Education" <${process.env.EMAIL_USER}>`,
+        to: email,
+        subject: "Password Changed Successfully - BRICKS Dashboard",
+        html: this.getConfirmationEmailTemplate(studentName),
+      };
 
-        if (now > limit.resetTime) {
-            this.rateLimits.set(email, { count: 1, resetTime: now + 3600000 });
-            return true;
-        }
-
-        if (limit.count >= this.MAX_OTP_PER_HOUR) {
-            return false;
-        }
-
-        limit.count++;
-        return true;
+      await sendMail(mailOptions);
+      return { success: true, messageId: 1 };
+    } catch (error) {
+      console.error("Confirmation email error:", error);
+      return { success: false, error: "Failed to send confirmation email." };
     }
+  }
 
-    hashOTP(otp) {
-        return crypto.createHash('sha256').update(otp.toString()).digest('hex');
-    }
-
-    verifyOTP(otp, hash) {
-        return this.hashOTP(otp) === hash;
-    }
-
-    async sendOTP(email, otp, studentName) {
-        try {
-            if (!email || !otp || !studentName) {
-                return { 
-                    success: false, 
-                    error: 'Missing required parameters' 
-                };
-            }
-
-            if (!this.isValidEmail(email)) {
-                return { 
-                    success: false, 
-                    error: 'Invalid email format' 
-                };
-            }
-
-            if (!this.checkRateLimit(email)) {
-                console.warn(`Rate limit exceeded for email: ${email}`);
-                return { 
-                    success: false, 
-                    error: 'Too many OTP requests. Please try again later.' 
-                };
-            }
-
-            const mailOptions = {
-                from: `"BRICKS Education" <${process.env.EMAIL_USER}>`,
-                to: email,
-                subject: 'Password Change OTP - BRICKS Dashboard',
-                html: this.getOTPEmailTemplate(studentName, otp)
-            };
-
-            const info = await this.transporter.sendMail(mailOptions);
-            
-            console.log(`OTP sent to ${email}, MessageID: ${info.messageId}`);
-            
-            return { 
-                success: true, 
-                messageId: info.messageId,
-                otpHash: this.hashOTP(otp)
-            };
-        } catch (error) {
-            console.error('Email sending error:', {
-                email,
-                error: error.message,
-                stack: error.stack
-            });
-            return { 
-                success: false, 
-                error: 'Failed to send email. Please try again later.' 
-            };
-        }
-    }
-
-    async sendPasswordChangeConfirmation(email, studentName) {
-        try {
-            if (!this.isValidEmail(email)) {
-                return { 
-                    success: false, 
-                    error: 'Invalid email format' 
-                };
-            }
-
-            const mailOptions = {
-                from: `"BRICKS Education" <${process.env.EMAIL_USER}>`,
-                to: email,
-                subject: 'Password Changed Successfully - BRICKS Dashboard',
-                html: this.getConfirmationEmailTemplate(studentName)
-            };
-
-            const info = await this.transporter.sendMail(mailOptions);
-            
-            console.log(`Password confirmation sent to ${email}, MessageID: ${info.messageId}`);
-            
-            return { 
-                success: true, 
-                messageId: info.messageId 
-            };
-        } catch (error) {
-            console.error('Confirmation email error:', {
-                email,
-                error: error.message
-            });
-            return { 
-                success: false, 
-                error: 'Failed to send confirmation email.' 
-            };
-        }
-    }
-
-    getOTPEmailTemplate(studentName, otp) {
-        return `
+  getOTPEmailTemplate(studentName, otp) {
+    return `
             <!DOCTYPE html>
             <html>
             <head>
@@ -250,10 +183,10 @@ class OTPService {
             </body>
             </html>
         `;
-    }
+  }
 
-    getConfirmationEmailTemplate(studentName) {
-        return `
+  getConfirmationEmailTemplate(studentName) {
+    return `
             <!DOCTYPE html>
             <html>
             <head>
@@ -320,16 +253,13 @@ class OTPService {
             </body>
             </html>
         `;
+  }
+  cleanupRateLimits() {
+    const now = Date.now();
+    for (const [email, limit] of this.rateLimits.entries()) {
+      if (now > limit.resetTime) this.rateLimits.delete(email);
     }
-
-    cleanupRateLimits() {
-        const now = Date.now();
-        for (const [email, limit] of this.rateLimits.entries()) {
-            if (now > limit.resetTime) {
-                this.rateLimits.delete(email);
-            }
-        }
-    }
+  }
 }
 
 const otpService = new OTPService();

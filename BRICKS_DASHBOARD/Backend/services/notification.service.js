@@ -1,87 +1,91 @@
-import dotenv from 'dotenv';
+import dotenv from "dotenv";
 dotenv.config();
-import nodemailer from 'nodemailer';
-import studentModel from '../models/student.model.js';
+import studentModel from "../models/student.model.js";
+import { sendMail } from "../config/mail.config.js";
 
 class NotificationService {
-    constructor() {
-        this.transporter = nodemailer.createTransport({
-            host: process.env.EMAIL_HOST,
-            port: Number(process.env.EMAIL_PORT),
-            secure: process.env.EMAIL_SECURE === 'true',
-            auth: {
-                user: process.env.EMAIL_USER,
-                pass: process.env.EMAIL_PASSWORD
-            }
-        });
+  async getStudentsByBatch(batch) {
+    try {
+      return await studentModel.find({ batch }).select("email fullname");
+    } catch (error) {
+      console.error("Error fetching students:", error);
+      return [];
     }
+  }
 
-    // Helper method to get students by batch
-    async getStudentsByBatch(batch) {
-        try {
-            return await studentModel.find({ batch }).select('email fullname');
-        } catch (error) {
-            console.error('Error fetching students:', error);
-            return [];
-        }
-    }
+  formatDate(date) {
+    return new Date(date).toLocaleString("en-IN", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      timeZone: "Asia/Kolkata",
+    });
+  }
 
-    // Format date in Indian timezone
-    formatDate(date) {
-        return new Date(date).toLocaleString('en-IN', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-            timeZone: 'Asia/Kolkata'
-        });
-    }
+  // Calculate hours until class
+  getHoursUntilClass(scheduledAt) {
+    return Math.round((new Date(scheduledAt) - new Date()) / (1000 * 60 * 60));
+  }
 
-    // Calculate hours until class
-    getHoursUntilClass(scheduledAt) {
-        return Math.round((new Date(scheduledAt) - new Date()) / (1000 * 60 * 60));
-    }
+  // Send class scheduled notification
+  async sendClassScheduledNotification(batch, classData, instructorName) {
+    try {
+      const students = await this.getStudentsByBatch(batch);
 
-    // Send class scheduled notification
-    async sendClassScheduledNotification(batch, classData, instructorName) {
-        try {
-            const students = await this.getStudentsByBatch(batch);
-            
-            if (students.length === 0) {
-                console.log('No students found in batch:', batch);
-                return { success: true, emailsSent: 0 };
-            }
+      if (students.length === 0) {
+        console.log("No students found in batch:", batch);
+        return { success: true, emailsSent: 0 };
+      }
 
-            const { className, description, scheduledAt, duration, googleMeetLink, preReadLinks } = classData;
-            const formattedDate = this.formatDate(scheduledAt);
+      const {
+        className,
+        description,
+        scheduledAt,
+        duration,
+        googleMeetLink,
+        preReadLinks,
+      } = classData;
+      const formattedDate = this.formatDate(scheduledAt);
 
-            // Generate pre-read links HTML
-            const preReadLinksHtml = preReadLinks && preReadLinks.length > 0
-                ? `
+      // Generate pre-read links HTML
+      const preReadLinksHtml =
+        preReadLinks && preReadLinks.length > 0
+          ? `
                     <div style="margin: 20px 0;">
                         <h3 style="color: #667eea; margin-bottom: 15px;">📚 Pre-Read Materials</h3>
                         <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #e0e0e0;">
-                            ${preReadLinks.map(link => `
+                            ${preReadLinks
+                              .map(
+                                (link) => `
                                 <div style="margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #f0f0f0;">
-                                    <a href="${link.url}" style="color: #667eea; text-decoration: none; font-weight: bold; font-size: 16px; display: block; margin-bottom: 5px;">
+                                    <a href="${
+                                      link.url
+                                    }" style="color: #667eea; text-decoration: none; font-weight: bold; font-size: 16px; display: block; margin-bottom: 5px;">
                                         🔗 ${link.title}
                                     </a>
-                                    ${link.description ? `<p style="margin: 5px 0 0 0; color: #666; font-size: 14px;">${link.description}</p>` : ''}
+                                    ${
+                                      link.description
+                                        ? `<p style="margin: 5px 0 0 0; color: #666; font-size: 14px;">${link.description}</p>`
+                                        : ""
+                                    }
                                 </div>
-                            `).join('')}
+                            `
+                              )
+                              .join("")}
                         </div>
                     </div>
                 `
-                : '';
-
-            const emailPromises = students.map(student => {
-                const mailOptions = {
-                    from: `"BRICKS Education" <${process.env.EMAIL_USER}>`,
-                    to: student.email,
-                    subject: `New Class Scheduled: ${className} - BRICKS Dashboard`,
-                    html: `
+          : "";
+      await Promise.all(
+        students.map(async (student) => {
+          const mailOptions = {
+            from: `"BRICKS Education" <${process.env.EMAIL_USER}>`,
+            to: student.email,
+            subject: `New Class Scheduled: ${className} - BRICKS Dashboard`,
+            html: `
                         <!DOCTYPE html>
                         <html>
                         <head>
@@ -105,12 +109,18 @@ class NotificationService {
                                     <p style="font-size: 18px; margin: 10px 0 0 0;">New Class Scheduled</p>
                                 </div>
                                 <div class="content">
-                                    <h2 style="color: #333;">Hello ${student.fullname.firstname}! 👋</h2>
+                                    <h2 style="color: #333;">Hello ${
+                                      student.fullname.firstname
+                                    }! 👋</h2>
                                     <p style="color: #666; font-size: 16px;">A new class has been scheduled for your batch. Mark your calendar!</p>
                                     
                                     <div class="class-card">
                                         <h2 style="margin-top: 0; color: #667eea;">📖 ${className}</h2>
-                                        ${description ? `<p style="color: #666; margin: 10px 0;">${description}</p>` : ''}
+                                        ${
+                                          description
+                                            ? `<p style="color: #666; margin: 10px 0;">${description}</p>`
+                                            : ""
+                                        }
                                         
                                         <div class="info-row">
                                             <span class="info-label">👨‍🏫 Instructor:</span>
@@ -161,53 +171,59 @@ class NotificationService {
                             </div>
                         </body>
                         </html>
-                    `
-                };
+                    `,
+          };
 
-                return this.transporter.sendMail(mailOptions);
-            });
-
-            await Promise.all(emailPromises);
-            console.log(`Class scheduled notifications sent to ${students.length} students`);
-            return { success: true, emailsSent: students.length };
-
-        } catch (error) {
-            console.error('Class scheduled notification error:', error);
-            return { success: false, error: error.message };
-        }
+          await sendMail(mailOptions);
+        })
+      );
+      return { success: true, emailsSent: students.length };
+    } catch (error) {
+      console.error("Class scheduled notification error:", error);
+      return { success: false, error: error.message };
     }
+  }
 
-    // Send class updated notification
-    async sendClassUpdatedNotification(batch, classData, instructorName, updatedFields) {
-        try {
-            const students = await this.getStudentsByBatch(batch);
-            
-            if (students.length === 0) {
-                console.log('No students found in batch:', batch);
-                return { success: true, emailsSent: 0 };
-            }
+  // Send class updated notification
+  async sendClassUpdatedNotification(
+    batch,
+    classData,
+    instructorName,
+    updatedFields
+  ) {
+    try {
+      const students = await this.getStudentsByBatch(batch);
 
-            const { className, description, scheduledAt, duration, googleMeetLink } = classData;
-            const formattedDate = this.formatDate(scheduledAt);
+      if (students.length === 0) {
+        console.log("No students found in batch:", batch);
+        return { success: true, emailsSent: 0 };
+      }
 
-            // Generate changes list
-            const changesHtml = updatedFields && updatedFields.length > 0
-                ? `
+      const { className, description, scheduledAt, duration, googleMeetLink } =
+        classData;
+      const formattedDate = this.formatDate(scheduledAt);
+
+      // Generate changes list
+      const changesHtml =
+        updatedFields && updatedFields.length > 0
+          ? `
                     <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 5px;">
                         <strong style="color: #856404;">⚠️ What Changed:</strong>
                         <ul style="margin: 10px 0 0 0; padding-left: 20px; color: #856404;">
-                            ${updatedFields.map(field => `<li>${field}</li>`).join('')}
+                            ${updatedFields
+                              .map((field) => `<li>${field}</li>`)
+                              .join("")}
                         </ul>
                     </div>
                 `
-                : '';
-
-            const emailPromises = students.map(student => {
-                const mailOptions = {
-                    from: `"BRICKS Education" <${process.env.EMAIL_USER}>`,
-                    to: student.email,
-                    subject: `Class Updated: ${className} - BRICKS Dashboard`,
-                    html: `
+          : "";
+      await Promise.all(
+        students.map(async (student) => {
+          const mailOptions = {
+            from: `"BRICKS Education" <${process.env.EMAIL_USER}>`,
+            to: student.email,
+            subject: `Class Updated: ${className} - BRICKS Dashboard`,
+            html: `
                         <!DOCTYPE html>
                         <html>
                         <head>
@@ -230,14 +246,20 @@ class NotificationService {
                                     <p style="font-size: 18px; margin: 10px 0 0 0;">⚠️ Class Updated</p>
                                 </div>
                                 <div class="content">
-                                    <h2 style="color: #333;">Hello ${student.fullname.firstname}! 👋</h2>
+                                    <h2 style="color: #333;">Hello ${
+                                      student.fullname.firstname
+                                    }! 👋</h2>
                                     <p style="color: #666; font-size: 16px;">Important update about your upcoming class:</p>
                                     
                                     ${changesHtml}
 
                                     <div class="class-card">
                                         <h2 style="margin-top: 0; color: #ff9a56;">📖 ${className}</h2>
-                                        ${description ? `<p style="color: #666; margin: 10px 0;">${description}</p>` : ''}
+                                        ${
+                                          description
+                                            ? `<p style="color: #666; margin: 10px 0;">${description}</p>`
+                                            : ""
+                                        }
                                         
                                         <div class="info-row">
                                             <span class="info-label">👨‍🏫 Instructor:</span>
@@ -278,41 +300,44 @@ class NotificationService {
                             </div>
                         </body>
                         </html>
-                    `
-                };
+                    `,
+          };
 
-                return this.transporter.sendMail(mailOptions);
-            });
-
-            await Promise.all(emailPromises);
-            console.log(`Class updated notifications sent to ${students.length} students`);
-            return { success: true, emailsSent: students.length };
-
-        } catch (error) {
-            console.error('Class updated notification error:', error);
-            return { success: false, error: error.message };
-        }
+          await sendMail(mailOptions);
+        })
+      );
+      return { success: true, emailsSent: students.length };
+    } catch (error) {
+      console.error("Class updated notification error:", error);
+      return { success: false, error: error.message };
     }
+  }
 
-    // Send class cancelled notification
-    async sendClassCancelledNotification(batch, classData, instructorName, reason = null) {
-        try {
-            const students = await this.getStudentsByBatch(batch);
-            
-            if (students.length === 0) {
-                console.log('No students found in batch:', batch);
-                return { success: true, emailsSent: 0 };
-            }
+  // Send class cancelled notification
+  async sendClassCancelledNotification(
+    batch,
+    classData,
+    instructorName,
+    reason = null
+  ) {
+    try {
+      const students = await this.getStudentsByBatch(batch);
 
-            const { className, scheduledAt } = classData;
-            const formattedDate = this.formatDate(scheduledAt);
+      if (students.length === 0) {
+        console.log("No students found in batch:", batch);
+        return { success: true, emailsSent: 0 };
+      }
 
-            const emailPromises = students.map(student => {
-                const mailOptions = {
-                    from: `"BRICKS Education" <${process.env.EMAIL_USER}>`,
-                    to: student.email,
-                    subject: `Class Cancelled: ${className} - BRICKS Dashboard`,
-                    html: `
+      const { className, scheduledAt } = classData;
+      const formattedDate = this.formatDate(scheduledAt);
+
+      await Promise.all(
+        students.map(async (student) => {
+          const mailOptions = {
+            from: `"BRICKS Education" <${process.env.EMAIL_USER}>`,
+            to: student.email,
+            subject: `Class Cancelled: ${className} - BRICKS Dashboard`,
+            html: `
                         <!DOCTYPE html>
                         <html>
                         <head>
@@ -334,7 +359,9 @@ class NotificationService {
                                     <p style="font-size: 18px; margin: 10px 0 0 0;">❌ Class Cancelled</p>
                                 </div>
                                 <div class="content">
-                                    <h2 style="color: #333;">Hello ${student.fullname.firstname}! 👋</h2>
+                                    <h2 style="color: #333;">Hello ${
+                                      student.fullname.firstname
+                                    }! 👋</h2>
                                     
                                     <div style="background: #f8d7da; border-left: 4px solid #dc3545; padding: 15px; margin: 20px 0; border-radius: 5px;">
                                         <strong style="color: #721c24;">⚠️ Important Notice:</strong>
@@ -359,12 +386,16 @@ class NotificationService {
                                             <span>${formattedDate}</span>
                                         </div>
 
-                                        ${reason ? `
+                                        ${
+                                          reason
+                                            ? `
                                             <div style="margin-top: 15px; padding: 15px; background: white; border-radius: 5px; border: 1px solid #e0e0e0;">
                                                 <strong style="color: #dc3545;">Reason:</strong>
                                                 <p style="margin: 10px 0 0 0; color: #666;">${reason}</p>
                                             </div>
-                                        ` : ''}
+                                        `
+                                            : ""
+                                        }
                                     </div>
 
                                     <div style="background: #e8f4f8; border-left: 4px solid #17a2b8; padding: 15px; margin: 20px 0; border-radius: 5px;">
@@ -385,42 +416,42 @@ class NotificationService {
                             </div>
                         </body>
                         </html>
-                    `
-                };
+                    `,
+          };
 
-                return this.transporter.sendMail(mailOptions);
-            });
+          await sendMail(mailOptions);
+        })
+      );
 
-            await Promise.all(emailPromises);
-            console.log(`Class cancelled notifications sent to ${students.length} students`);
-            return { success: true, emailsSent: students.length };
-
-        } catch (error) {
-            console.error('Class cancelled notification error:', error);
-            return { success: false, error: error.message };
-        }
+      return { success: true, emailsSent: students.length };
+    } catch (error) {
+      console.error("Class cancelled notification error:", error);
+      return { success: false, error: error.message };
     }
+  }
 
-    // Send class reminder (can be called 24 hours before class)
-    async sendClassReminderNotification(batch, classData, instructorName) {
-        try {
-            const students = await this.getStudentsByBatch(batch);
-            
-            if (students.length === 0) {
-                console.log('No students found in batch:', batch);
-                return { success: true, emailsSent: 0 };
-            }
+  // Send class reminder (can be called 24 hours before class)
+  async sendClassReminderNotification(batch, classData, instructorName) {
+    try {
+      const students = await this.getStudentsByBatch(batch);
 
-            const { className, scheduledAt, duration, googleMeetLink, preReadLinks } = classData;
-            const formattedDate = this.formatDate(scheduledAt);
-            const hoursUntil = this.getHoursUntilClass(scheduledAt);
+      if (students.length === 0) {
+        console.log("No students found in batch:", batch);
+        return { success: true, emailsSent: 0 };
+      }
 
-            const emailPromises = students.map(student => {
-                const mailOptions = {
-                    from: `"BRICKS Education" <${process.env.EMAIL_USER}>`,
-                    to: student.email,
-                    subject: `Reminder: ${className} starts in ${hoursUntil} hours - BRICKS Dashboard`,
-                    html: `
+      const { className, scheduledAt, duration, googleMeetLink, preReadLinks } =
+        classData;
+      const formattedDate = this.formatDate(scheduledAt);
+      const hoursUntil = this.getHoursUntilClass(scheduledAt);
+
+      await Promise.all(
+        students.map(async (student) => {
+          const mailOptions = {
+            from: `"BRICKS Education" <${process.env.EMAIL_USER}>`,
+            to: student.email,
+            subject: `Reminder: ${className} starts in ${hoursUntil} hours - BRICKS Dashboard`,
+            html: `
                         <!DOCTYPE html>
                         <html>
                         <head>
@@ -444,7 +475,9 @@ class NotificationService {
                                     <p style="font-size: 18px; margin: 10px 0 0 0;">⏰ Class Reminder</p>
                                 </div>
                                 <div class="content">
-                                    <h2 style="color: #333;">Hello ${student.fullname.firstname}! 👋</h2>
+                                    <h2 style="color: #333;">Hello ${
+                                      student.fullname.firstname
+                                    }! 👋</h2>
                                     
                                     <div style="text-align: center;">
                                         <div class="reminder-badge">
@@ -473,12 +506,16 @@ class NotificationService {
                                         </div>
                                     </div>
 
-                                    ${preReadLinks && preReadLinks.length > 0 ? `
+                                    ${
+                                      preReadLinks && preReadLinks.length > 0
+                                        ? `
                                         <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 5px;">
                                             <strong style="color: #856404;">📚 Last Chance:</strong>
                                             <p style="margin: 10px 0 0 0; color: #856404;">Don't forget to review the pre-read materials before class!</p>
                                         </div>
-                                    ` : ''}
+                                    `
+                                        : ""
+                                    }
 
                                     <div style="text-align: center; margin: 30px 0;">
                                         <a href="${googleMeetLink}" class="meet-button" style="color: #333;">
@@ -503,21 +540,18 @@ class NotificationService {
                             </div>
                         </body>
                         </html>
-                    `
-                };
+                    `,
+          };
 
-                return this.transporter.sendMail(mailOptions);
-            });
-
-            await Promise.all(emailPromises);
-            console.log(`Class reminder notifications sent to ${students.length} students`);
-            return { success: true, emailsSent: students.length };
-
-        } catch (error) {
-            console.error('Class reminder notification error:', error);
-            return { success: false, error: error.message };
-        }
+          await sendMail(mailOptions);
+        })
+      );
+      return { success: true, emailsSent: students.length };
+    } catch (error) {
+      console.error("Class reminder notification error:", error);
+      return { success: false, error: error.message };
     }
+  }
 }
 
 export default new NotificationService();
