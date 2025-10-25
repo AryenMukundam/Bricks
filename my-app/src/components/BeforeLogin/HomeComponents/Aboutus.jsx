@@ -42,20 +42,35 @@ const AboutUs = () => {
             </p>
           </div>
 
-          {/* Image */}
+          {/* Image/Video */}
           <div className="py-4 sm:py-6 md:py-4 flex items-center justify-center order-1 md:order-2">
             <div className="relative w-full max-w-sm sm:max-w-md md:max-w-lg group">
               <div className="absolute -inset-2 sm:-inset-3 bg-gradient-to-br from-orange-400 to-orange-600 rounded-2xl sm:rounded-3xl opacity-20 group-hover:opacity-30 transition-opacity duration-300"></div>
 
+              {/* YouTube Video Embed */}
               <div className="relative overflow-hidden rounded-xl sm:rounded-2xl shadow-md sm:shadow-lg group-hover:shadow-xl transition-all duration-500">
+                <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
+                  <iframe
+                    className="absolute top-0 left-0 w-full h-full rounded-xl sm:rounded-2xl"
+                    src="https://www.youtube.com/embed/5NOqsTeEcFU"
+                    title="BRICKS Team Video"
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  ></iframe>
+                </div>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+              </div>
+
+              {/* Optional: Keep image as fallback or secondary content */}
+              {/* <div className="relative overflow-hidden rounded-xl sm:rounded-2xl shadow-md sm:shadow-lg group-hover:shadow-xl transition-all duration-500 mt-4">
                 <img
                   src={teamPhoto}
                   alt="BRICKS team group photo with building blocks"
                   className="w-full h-auto rounded-xl sm:rounded-2xl object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out"
                   style={{ aspectRatio: "4/3" }}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-              </div>
+              </div> */}
             </div>
           </div>
         </div>
