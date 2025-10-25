@@ -22,6 +22,7 @@ import AssignmentDetail from "./pages/InstructorDashboard/AssignmentDetail";
 import AssignmentSubmissions from "./pages/InstructorDashboard/AssignmentSubmissions";
 import StudentAssignment from "./pages/StudentDashboard/StudentAssignments";
 import AssignmentPage from "./pages/StudentDashboard/AssignmentPage";
+import StudentOnboarding from "./pages/Login/StudentOnboarding";
 
 const getCookie = (name) => {
   const value = `; ${document.cookie}`;
@@ -159,6 +160,15 @@ function App() {
         />
 
         <Route
+          path="/student-onboarding"
+          element={
+            <ProtectedRoute allowedRoles={["student"]}>
+              <StudentOnboarding />
+            </ProtectedRoute>
+          }
+        />
+
+         <Route
           path="/student-dashboard"
           element={
             <ProtectedRoute allowedRoles={["student"]}>

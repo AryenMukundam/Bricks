@@ -7,8 +7,15 @@ import { setStudentData } from "../../redux/studentSlice";
 import Logo from "../../assets/images/Logo.png";
 import Navbar from "../../components/BeforeLogin/Navbar";
 
+// Add setCookie function
+const setCookie = (name, value) => {
+  const expires = new Date();
+  expires.setTime(expires.getTime() + 7 * 24 * 60 * 60 * 1000); // 7 days
+  document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/`;
+};
+
 const StudentOnboarding = ({ tempToken, enrollmentNumber, email, isFirstLogin }) => {
-  const [step, setStep] = useState("welcome"); // welcome, otp-sent, verify-otp, success
+  const [step, setStep] = useState("welcome");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -56,7 +63,6 @@ const StudentOnboarding = ({ tempToken, enrollmentNumber, email, isFirstLogin })
   };
 
   const handleVerifyAndChangePassword = async () => {
-    // Validation
     if (!formData.otp || formData.otp.length !== 6) {
       setError("Please enter a valid 6-digit OTP");
       return;
@@ -83,7 +89,16 @@ const StudentOnboarding = ({ tempToken, enrollmentNumber, email, isFirstLogin })
         tempToken
       });
 
-      // Store token and student data
+      console.log('Password change response:', response);
+
+      // CRITICAL FIX: Store token and userRole in cookies
+      if (response.token) {
+        setCookie("token", response.token);
+        setCookie("userRole", "student");
+        console.log('Token and role stored in cookies');
+      }
+
+      // Store student data in Redux
       dispatch(setStudentData(response.student));
       
       setStep("success");
@@ -93,6 +108,7 @@ const StudentOnboarding = ({ tempToken, enrollmentNumber, email, isFirstLogin })
         navigate("/student-dashboard");
       }, 2000);
     } catch (err) {
+      console.error('Password change error:', err);
       setError(err.message || "Failed to verify OTP. Please try again.");
     } finally {
       setLoading(false);
@@ -102,73 +118,73 @@ const StudentOnboarding = ({ tempToken, enrollmentNumber, email, isFirstLogin })
   // Welcome Step
   if (step === "welcome") {
     return (
-        <>
+      <>
         <Navbar/>
-      <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100 flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl p-8 animate-scale-in">
-          <div className="text-center mb-8">
-            <img src={Logo} alt="Logo" className="w-20 h-20 mx-auto mb-4 rounded-lg" />
-            <h1 className="text-3xl font-bold text-gray-800 mb-2">
-              Welcome to BRICKS! 🎉
-            </h1>
-            <p className="text-gray-600">
-              {isFirstLogin ? "This is your first login!" : "You need to change your password"}
-            </p>
-          </div>
+        <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100 flex items-center justify-center p-4">
+          <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl p-8">
+            <div className="text-center mb-8">
+              <img src={Logo} alt="Logo" className="w-20 h-20 mx-auto mb-4 rounded-lg" />
+              <h1 className="text-3xl font-bold text-gray-800 mb-2">
+                Welcome to BRICKS! 🎉
+              </h1>
+              <p className="text-gray-600">
+                {isFirstLogin ? "This is your first login!" : "You need to change your password"}
+              </p>
+            </div>
 
-          <div className="bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded-lg p-6 mb-6">
-            <h3 className="font-semibold text-orange-900 mb-4 flex items-center gap-2">
-              <FiLock className="text-orange-600" />
-              Security Setup Required
-            </h3>
-            <div className="space-y-3 text-sm text-gray-700">
-              <div className="flex items-start gap-3">
-                <FiCheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-                <span>Verify your email with a One-Time Password (OTP)</span>
-              </div>
-              <div className="flex items-start gap-3">
-                <FiCheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-                <span>Create a strong and secure password</span>
-              </div>
-              <div className="flex items-start gap-3">
-                <FiCheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-                <span>Access your personalized dashboard</span>
+            <div className="bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded-lg p-6 mb-6">
+              <h3 className="font-semibold text-orange-900 mb-4 flex items-center gap-2">
+                <FiLock className="text-orange-600" />
+                Security Setup Required
+              </h3>
+              <div className="space-y-3 text-sm text-gray-700">
+                <div className="flex items-start gap-3">
+                  <FiCheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                  <span>Verify your email with a One-Time Password (OTP)</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <FiCheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                  <span>Create a strong and secure password</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <FiCheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                  <span>Access your personalized dashboard</span>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-            <div className="flex items-start gap-2 text-sm text-blue-800">
-              <FiMail className="w-5 h-5 flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="font-medium mb-1">OTP will be sent to:</p>
-                <p className="font-mono">{email}</p>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+              <div className="flex items-start gap-2 text-sm text-blue-800">
+                <FiMail className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-medium mb-1">OTP will be sent to:</p>
+                  <p className="font-mono">{email}</p>
+                </div>
               </div>
             </div>
-          </div>
 
-          <button
-            onClick={handleRequestOTP}
-            disabled={loading}
-            className="w-full bg-gradient-to-r from-orange-600 to-amber-600 text-white py-3 rounded-lg font-semibold hover:from-orange-700 hover:to-amber-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-          >
-            {loading ? (
-              <>
-                <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                <span>Sending OTP...</span>
-              </>
-            ) : (
-              <>
-                <span>Get Started</span>
-                <FiArrowRight />
-              </>
-            )}
-          </button>
+            <button
+              onClick={handleRequestOTP}
+              disabled={loading}
+              className="w-full bg-gradient-to-r from-orange-600 to-amber-600 text-white py-3 rounded-lg font-semibold transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 hover:shadow-lg hover:scale-105 active:scale-95 disabled:hover:scale-100"
+            >
+              {loading ? (
+                <>
+                  <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <span>Sending OTP...</span>
+                </>
+              ) : (
+                <>
+                  <span>Get Started</span>
+                  <FiArrowRight />
+                </>
+              )}
+            </button>
+          </div>
         </div>
-      </div>
       </>
     );
   }
@@ -177,7 +193,7 @@ const StudentOnboarding = ({ tempToken, enrollmentNumber, email, isFirstLogin })
   if (step === "otp-sent") {
     return (
       <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100 flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl p-8 animate-scale-in">
+        <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl p-8">
           <div className="text-center mb-6">
             <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-teal-600 rounded-full mx-auto flex items-center justify-center mb-4">
               <FiMail className="text-white text-2xl" />
@@ -189,7 +205,7 @@ const StudentOnboarding = ({ tempToken, enrollmentNumber, email, isFirstLogin })
 
           <button
             onClick={() => setStep("verify-otp")}
-            className="w-full bg-gradient-to-r from-orange-600 to-amber-600 text-white py-3 rounded-lg font-semibold hover:from-orange-700 hover:to-amber-700 transition-all flex items-center justify-center gap-2"
+            className="w-full bg-gradient-to-r from-orange-600 to-amber-600 text-white py-3 rounded-lg font-semibold transition-all duration-300 flex items-center justify-center gap-2 hover:shadow-lg hover:scale-105 active:scale-95"
           >
             <span>I've Received the OTP</span>
             <FiArrowRight />
@@ -198,7 +214,7 @@ const StudentOnboarding = ({ tempToken, enrollmentNumber, email, isFirstLogin })
           <button
             onClick={handleRequestOTP}
             disabled={loading}
-            className="w-full mt-4 text-gray-600 py-2 hover:text-orange-600 transition-colors disabled:opacity-50"
+            className="w-full mt-4 text-gray-600 py-2 transition-all duration-200 disabled:opacity-50 hover:text-orange-600 hover:scale-105 active:scale-95 disabled:hover:scale-100"
           >
             {loading ? "Resending..." : "Resend OTP"}
           </button>
@@ -211,7 +227,7 @@ const StudentOnboarding = ({ tempToken, enrollmentNumber, email, isFirstLogin })
   if (step === "verify-otp") {
     return (
       <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100 flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl p-8 animate-scale-in">
+        <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl p-8">
           <div className="text-center mb-6">
             <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full mx-auto flex items-center justify-center mb-4">
               <FiLock className="text-white text-2xl" />
@@ -239,7 +255,7 @@ const StudentOnboarding = ({ tempToken, enrollmentNumber, email, isFirstLogin })
                 onChange={handleInputChange}
                 maxLength={6}
                 placeholder="000000"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-center text-2xl tracking-widest font-mono"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-center text-2xl tracking-widest font-mono transition-all duration-200"
                 disabled={loading}
               />
             </div>
@@ -255,13 +271,13 @@ const StudentOnboarding = ({ tempToken, enrollmentNumber, email, isFirstLogin })
                   value={formData.newPassword}
                   onChange={handleInputChange}
                   placeholder="Enter new password"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all duration-200"
                   disabled={loading}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 transition-all duration-200 hover:text-orange-600 hover:scale-110 active:scale-95"
                 >
                   {showPassword ? <FiEyeOff /> : <FiEye />}
                 </button>
@@ -279,13 +295,13 @@ const StudentOnboarding = ({ tempToken, enrollmentNumber, email, isFirstLogin })
                   value={formData.confirmPassword}
                   onChange={handleInputChange}
                   placeholder="Confirm new password"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all duration-200"
                   disabled={loading}
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 transition-all duration-200 hover:text-orange-600 hover:scale-110 active:scale-95"
                 >
                   {showConfirmPassword ? <FiEyeOff /> : <FiEye />}
                 </button>
@@ -296,7 +312,7 @@ const StudentOnboarding = ({ tempToken, enrollmentNumber, email, isFirstLogin })
           <button
             onClick={handleVerifyAndChangePassword}
             disabled={loading || !formData.otp || !formData.newPassword || !formData.confirmPassword}
-            className="w-full bg-gradient-to-r from-orange-600 to-amber-600 text-white py-3 rounded-lg font-semibold hover:from-orange-700 hover:to-amber-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="w-full bg-gradient-to-r from-orange-600 to-amber-600 text-white py-3 rounded-lg font-semibold transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 hover:shadow-lg hover:scale-105 active:scale-95 disabled:hover:scale-100"
           >
             {loading ? (
               <>
@@ -313,7 +329,7 @@ const StudentOnboarding = ({ tempToken, enrollmentNumber, email, isFirstLogin })
 
           <button
             onClick={() => setStep("otp-sent")}
-            className="w-full mt-4 text-gray-600 py-2 hover:text-orange-600 transition-colors"
+            className="w-full mt-4 text-gray-600 py-2 transition-all duration-200 hover:text-orange-600 hover:scale-105 active:scale-95"
           >
             Back
           </button>
@@ -326,8 +342,8 @@ const StudentOnboarding = ({ tempToken, enrollmentNumber, email, isFirstLogin })
   if (step === "success") {
     return (
       <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100 flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl p-8 animate-scale-in text-center">
-          <div className="w-20 h-20 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full mx-auto flex items-center justify-center mb-4">
+        <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl p-8 text-center">
+          <div className="w-20 h-20 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full mx-auto flex items-center justify-center mb-4 animate-bounce">
             <FiCheckCircle className="text-white text-4xl" />
           </div>
           <h2 className="text-3xl font-bold text-gray-800 mb-2">All Set! 🎉</h2>

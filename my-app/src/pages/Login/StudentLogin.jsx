@@ -14,7 +14,7 @@ import Navbar from "../../components/BeforeLogin/Navbar";
 import { studentlogin } from "../../apiCalls/authCalls";
 import { useDispatch } from "react-redux";
 import { setStudentData } from "../../redux/studentSlice";
-import OnBoarding from "./OnBoarding";
+import StudentOnboarding from "./StudentOnboarding";
 
 const setCookie = (name, value) => {
   const expires = new Date();
@@ -126,7 +126,7 @@ function StudentLogin() {
 
   if (showOnboarding && onboardingData) {
     return (
-      <OnBoarding
+      <StudentOnboarding
         tempToken={onboardingData.tempToken}
         enrollmentNumber={onboardingData.enrollmentNumber}
         email={onboardingData.email}

@@ -15,10 +15,23 @@ const port = process.env.PORT || 3000;
 
 connectToDB();
 
+const allowedOrigins = [
+  "https://bricks.org.in",
+  "http://localhost:5173" 
+];
+
+
 app.use(cors({
-  origin: "https://bricks.org.in",
-  credentials: true, 
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true
 }));
+
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 app.use(cookieParser());

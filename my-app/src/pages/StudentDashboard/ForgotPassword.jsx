@@ -132,7 +132,7 @@ const ForgotPassword = () => {
                 value={formData.enrollmentNumber}
                 onChange={handleInputChange}
                 placeholder="Enter your enrollment number"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
                 disabled={loading}
               />
             </div>
@@ -147,7 +147,7 @@ const ForgotPassword = () => {
                 value={formData.email}
                 onChange={handleInputChange}
                 placeholder="Enter your registered email"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
                 disabled={loading}
               />
             </div>
@@ -163,11 +163,11 @@ const ForgotPassword = () => {
           <button
             onClick={handleRequestOTP}
             disabled={loading || !formData.enrollmentNumber || !formData.email}
-            className="w-full bg-gradient-to-r from-orange-600 to-amber-600 text-white py-3 rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mb-4"
+            className="w-full bg-gradient-to-r from-orange-600 to-amber-600 text-white py-3 rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mb-4 transition-all duration-300 hover:shadow-lg hover:scale-105 active:scale-95 disabled:hover:scale-100"
           >
             {loading ? (
               <>
-                <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <svg className="h-5 w-5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
@@ -176,16 +176,16 @@ const ForgotPassword = () => {
             ) : (
               <>
                 <span>Send OTP</span>
-                <FiArrowRight />
+                <FiArrowRight className="transition-transform duration-300 group-hover:translate-x-1" />
               </>
             )}
           </button>
 
           <button
             onClick={() => navigate('/login/student')}
-            className="w-full text-gray-600 py-2 font-medium flex items-center justify-center gap-2"
+            className="w-full text-gray-600 py-2 font-medium flex items-center justify-center gap-2 transition-all duration-200 hover:text-gray-900 hover:gap-3 active:scale-95"
           >
-            <FiArrowLeft />
+            <FiArrowLeft className="transition-transform duration-300" />
             <span>Back to Login</span>
           </button>
         </div>
@@ -209,25 +209,25 @@ const ForgotPassword = () => {
 
           <button
             onClick={() => setStep("verify-otp")}
-            className="w-full bg-gradient-to-r from-orange-600 to-amber-600 text-white py-3 rounded-lg font-semibold flex items-center justify-center gap-2"
+            className="w-full bg-gradient-to-r from-orange-600 to-amber-600 text-white py-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition-all duration-300 hover:shadow-lg hover:scale-105 active:scale-95"
           >
             <span>I've Received the OTP</span>
-            <FiArrowRight />
+            <FiArrowRight className="transition-transform duration-300" />
           </button>
 
           <button
             onClick={handleRequestOTP}
             disabled={loading}
-            className="w-full mt-4 text-gray-600 py-2 font-medium disabled:opacity-50"
+            className="w-full mt-4 text-gray-600 py-2 font-medium disabled:opacity-50 transition-all duration-200 hover:text-orange-600 hover:scale-105 active:scale-95 disabled:hover:scale-100"
           >
             {loading ? "Resending..." : "Resend OTP"}
           </button>
 
           <button
             onClick={() => setStep("request")}
-            className="w-full mt-2 text-gray-600 py-2 font-medium flex items-center justify-center gap-2"
+            className="w-full mt-2 text-gray-600 py-2 font-medium flex items-center justify-center gap-2 transition-all duration-200 hover:text-gray-900 hover:gap-3 active:scale-95"
           >
-            <FiArrowLeft />
+            <FiArrowLeft className="transition-transform duration-300" />
             <span>Change Details</span>
           </button>
         </div>
@@ -267,7 +267,7 @@ const ForgotPassword = () => {
                 onChange={handleInputChange}
                 maxLength={6}
                 placeholder="000000"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-center text-2xl tracking-widest font-mono"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-center text-2xl tracking-widest font-mono transition-all duration-200"
                 disabled={loading}
               />
             </div>
@@ -283,13 +283,13 @@ const ForgotPassword = () => {
                   value={formData.newPassword}
                   onChange={handleInputChange}
                   placeholder="Enter new password"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
                   disabled={loading}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 transition-all duration-200 hover:text-orange-600 hover:scale-110 active:scale-95"
                 >
                   {showPassword ? <FiEyeOff /> : <FiEye />}
                 </button>
@@ -307,13 +307,13 @@ const ForgotPassword = () => {
                   value={formData.confirmPassword}
                   onChange={handleInputChange}
                   placeholder="Confirm new password"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
                   disabled={loading}
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 transition-all duration-200 hover:text-orange-600 hover:scale-110 active:scale-95"
                 >
                   {showConfirmPassword ? <FiEyeOff /> : <FiEye />}
                 </button>
@@ -324,11 +324,11 @@ const ForgotPassword = () => {
           <button
             onClick={handleResetPassword}
             disabled={loading || !formData.otp || !formData.newPassword || !formData.confirmPassword}
-            className="w-full bg-gradient-to-r from-orange-600 to-amber-600 text-white py-3 rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mb-4"
+            className="w-full bg-gradient-to-r from-orange-600 to-amber-600 text-white py-3 rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mb-4 transition-all duration-300 hover:shadow-lg hover:scale-105 active:scale-95 disabled:hover:scale-100"
           >
             {loading ? (
               <>
-                <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <svg className="h-5 w-5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
@@ -341,7 +341,7 @@ const ForgotPassword = () => {
 
           <button
             onClick={() => setStep("otp-sent")}
-            className="w-full text-gray-600 py-2 font-medium"
+            className="w-full text-gray-600 py-2 font-medium transition-all duration-200 hover:text-gray-900 hover:scale-105 active:scale-95"
           >
             Back
           </button>
@@ -355,7 +355,7 @@ const ForgotPassword = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
-          <div className="w-20 h-20 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full mx-auto flex items-center justify-center mb-6">
+          <div className="w-20 h-20 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full mx-auto flex items-center justify-center mb-6 animate-bounce">
             <FiCheckCircle className="text-white text-4xl" />
           </div>
           <h2 className="text-3xl font-bold text-gray-900 mb-3">Password Reset Successful!</h2>
@@ -365,7 +365,7 @@ const ForgotPassword = () => {
             Redirecting to login page...
           </p>
           <div className="flex justify-center">
-            <svg className="h-8 w-8 text-orange-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <svg className="h-8 w-8 text-orange-600 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
