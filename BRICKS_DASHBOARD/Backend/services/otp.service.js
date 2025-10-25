@@ -6,7 +6,7 @@ import { sendMail } from "../config/mail.config.js";
 class OTPService {
   constructor() {
     this.rateLimits = new Map();
-    this.MAX_OTP_PER_HOUR = 3;
+    this.MAX_OTP_PER_HOUR = 5;
   }
 
   isValidEmail(email) {

@@ -45,7 +45,8 @@ export const studentlogin = async (studentData) => {
     throw {
       message: error.response?.data?.errors?.[0]?.msg || 
                error.response?.data?.msg || 
-               'Login failed. Please try again.'
+               'Login failed. Please try again.',
+      statusCode: error.response?.status
     };
   }
 };
@@ -56,7 +57,8 @@ export const studentlogout = async () => {
     return response.data;
   } catch (error) {
     throw {
-      message: error.response?.data?.msg || 'Logout failed'
+      message: error.response?.data?.msg || 'Logout failed',
+      statusCode: error.response?.status
     };
   }
 };
@@ -67,7 +69,8 @@ export const studentprofile = async () => {
     return response.data;
   } catch (error) {
     throw {
-      message: error.response?.data?.msg || 'Data Not Visible'
+      message: error.response?.data?.msg || 'Data Not Visible',
+      statusCode: error.response?.status
     };
   }
 };
@@ -78,7 +81,8 @@ export const instructorprofile = async () => {
     return response.data;
   } catch (error) {
     throw {
-      message: error.response?.data?.msg || 'Data Not Visible'
+      message: error.response?.data?.msg || 'Data Not Visible',
+      statusCode: error.response?.status
     };
   }
 };
@@ -91,12 +95,17 @@ export const requestPasswordChangeOTP = async (data) => {
     console.log('OTP request response:', response.data);
     return response.data;
   } catch (error) {
-    console.error('OTP request error:', error.response?.data || error);
+    console.error('OTP request full error:', error);
+    console.error('Error response:', error.response);
+    console.error('Error status:', error.response?.status);
+    console.error('Error data:', error.response?.data);
+    
     throw {
       message: error.response?.data?.errors?.[0]?.msg || 
                error.response?.data?.msg || 
                error.message ||
-               'Failed to send OTP. Please try again.'
+               'Failed to send OTP. Please try again.',
+      statusCode: error.response?.status
     };
   }
 };
@@ -109,7 +118,8 @@ export const verifyOTPAndChangePassword = async (data) => {
     throw {
       message: error.response?.data?.errors?.[0]?.msg || 
                error.response?.data?.msg || 
-               'Failed to verify OTP. Please try again.'
+               'Failed to verify OTP. Please try again.',
+      statusCode: error.response?.status
     };
   }
 };
@@ -117,13 +127,21 @@ export const verifyOTPAndChangePassword = async (data) => {
 // Forgot Password Flow
 export const forgotPassword = async (data) => {
   try {
+    console.log('Sending forgot password request with data:', data);
     const response = await api.post("/students/forgot-password", data);
+    console.log('Forgot password response:', response.data);
     return response.data;
   } catch (error) {
+    console.error('Forgot password full error:', error);
+    console.error('Error response:', error.response);
+    console.error('Error status:', error.response?.status);
+    console.error('Error data:', error.response?.data);
+    
     throw {
       message: error.response?.data?.errors?.[0]?.msg || 
                error.response?.data?.msg || 
-               'Failed to process request. Please try again.'
+               'Failed to process request. Please try again.',
+      statusCode: error.response?.status
     };
   }
 };
@@ -136,7 +154,8 @@ export const resetPassword = async (data) => {
     throw {
       message: error.response?.data?.errors?.[0]?.msg || 
                error.response?.data?.msg || 
-               'Failed to reset password. Please try again.'
+               'Failed to reset password. Please try again.',
+      statusCode: error.response?.status
     };
   }
 };
@@ -150,7 +169,8 @@ export const instructorlogin = async (instructorData) => {
     throw {
       message: error.response?.data?.errors?.[0]?.msg || 
                error.response?.data?.msg || 
-               'Login failed. Please try again.'
+               'Login failed. Please try again.',
+      statusCode: error.response?.status
     };
   }
 };
@@ -161,7 +181,8 @@ export const instructorlogout = async () => {
     return response.data;
   } catch (error) {
     throw {
-      message: error.response?.data?.msg || 'Logout failed'
+      message: error.response?.data?.msg || 'Logout failed',
+      statusCode: error.response?.status
     };
   }
 };
