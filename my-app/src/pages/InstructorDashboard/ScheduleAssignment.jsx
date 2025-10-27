@@ -2,19 +2,12 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Calendar, Plus, Trash2, X } from "lucide-react";
 import { createAssignment , updateAssignment , getAssignmentById } from "../../apiCalls/assignmentCalls";
+import Navbar from "../../components/InstructorDashboard/Navbar";
 
 
 
 
 
-// Mock Navbar component
-const Navbar = () => (
-  <nav className="bg-white shadow-sm border-b">
-    <div className="max-w-7xl mx-auto px-4 py-4">
-      <h1 className="text-xl font-bold text-gray-800">Assignment System</h1>
-    </div>
-  </nav>
-);
 
 export default function ScheduleAssignment() {
   const { id } = useParams();
@@ -301,7 +294,7 @@ export default function ScheduleAssignment() {
                   name="title"
                   value={formData.title}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
                   placeholder="Enter assignment title"
                 />
               </div>
@@ -314,7 +307,7 @@ export default function ScheduleAssignment() {
                   name="description"
                   value={formData.description}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 h-20"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 h-20"
                   placeholder="Enter assignment description"
                 />
               </div>
@@ -329,7 +322,7 @@ export default function ScheduleAssignment() {
                     name="batch"
                     value={formData.batch}
                     onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
                     placeholder="e.g., 2024-CS-A"
                   />
                 </div>
@@ -342,7 +335,7 @@ export default function ScheduleAssignment() {
                     name="assignmentType"
                     value={formData.assignmentType}
                     onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
                   >
                     <option value="mcq">Multiple Choice</option>
                     <option value="multiple_correct">Multiple Correct</option>
@@ -361,7 +354,7 @@ export default function ScheduleAssignment() {
                   name="dueDate"
                   value={formData.dueDate}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
               </div>
 
@@ -394,7 +387,7 @@ export default function ScheduleAssignment() {
                         <div className="flex justify-between items-start">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-2">
-                              <span className="bg-indigo-100 text-indigo-700 px-2 py-1 rounded text-xs font-medium">
+                              <span className="bg-orange-100 text-orange-700 px-2 py-1 rounded text-xs font-medium">
                                 Q{index + 1}
                               </span>
                               <span className="bg-gray-200 text-gray-700 px-2 py-1 rounded text-xs">
@@ -626,7 +619,7 @@ export default function ScheduleAssignment() {
 
         {/* Question Modal */}
         {showQuestionModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="fixed inset-0 backdrop-blur-md bg-opacity-20 flex items-center justify-center p-4 z-50">
             <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-xl font-bold text-gray-800">
@@ -649,7 +642,7 @@ export default function ScheduleAssignment() {
                     name="questionText"
                     value={currentQuestion.questionText}
                     onChange={handleQuestionChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 h-24"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 h-24"
                     placeholder="Enter your question"
                   />
                 </div>
@@ -664,7 +657,7 @@ export default function ScheduleAssignment() {
                         name="questionType"
                         value={currentQuestion.questionType}
                         onChange={handleQuestionChange}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
                       >
                         <option value="mcq">MCQ</option>
                         <option value="multiple_correct">
@@ -684,7 +677,7 @@ export default function ScheduleAssignment() {
                       value={currentQuestion.points}
                       onChange={handleQuestionChange}
                       min="1"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
                     />
                   </div>
                 </div>
@@ -698,7 +691,7 @@ export default function ScheduleAssignment() {
                       </label>
                       <button
                         onClick={addOption}
-                        className="text-indigo-600 hover:text-indigo-800 text-sm flex items-center gap-1"
+                        className="text-orange-600 hover:text-orange-800 text-sm flex items-center gap-1"
                       >
                         <Plus size={16} />
                         Add Option
@@ -733,7 +726,7 @@ export default function ScheduleAssignment() {
                                 e.target.value
                               )
                             }
-                            className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
                             placeholder={`Option ${String.fromCharCode(
                               65 + index
                             )}`}
@@ -755,7 +748,7 @@ export default function ScheduleAssignment() {
                 <div className="flex gap-3 pt-4">
                   <button
                     onClick={saveQuestion}
-                    className="flex-1 bg-indigo-600 text-white py-2 rounded-md hover:bg-indigo-700 transition-colors"
+                    className="flex-1 bg-orange-600 text-white py-2 rounded-md hover:bg-orange-700 transition-colors"
                   >
                     {editingIndex !== null ? "Update Question" : "Add Question"}
                   </button>
